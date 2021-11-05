@@ -13,25 +13,31 @@
 % force capitaliziation), anything in "" will be capitalize based on
 % the whim of bibtex
 
-@MISC{asbrink:parallelqs,
+@ARTICLE{asbrink:parallelqs,
   author = "Olof Asbrink and Joel Brynielsson",
   title = "Factoring large integers using parallel Quadratic Sieve",
-  HOWPUBLISHED = "https://www.csc.kth.se/~joel/qs.pdf",
+  YEAR = "1998",
+  MONTH = "March",
+  JOURNAL = "https://www.csc.kth.se/~joel/qs.pdf",
   ANNOTE = ""
 
 }
 
-@MISC {hoffstein:cryptography,
+@BOOK {hoffstein:cryptography,
+        KEY = "Cryptography",
         AUTHOR = "Jeffrey Hoffstein, Jill Pipher, Joseph H. Silverman",
         TITLE = "An Introduction to Mathematical Cryptography",
-        HOWPUBLISHED = "Springer",
+        PUBLISHER = "Springer",
+        YEAR = "2014",
         ANNOTE =  ""
 }
 
-@MISC {verma:cudampilanczos,
+@ARTICLE {verma:cudampilanczos,
         AUTHOR = "Prashant Verma Kapil Sharma",
         TITLE = "GPU-Accelerated Optimization Of Block Lanczos Solver For Sparse Linear System",
-        HOWPUBLISHED = "\url{https://www.ijstr.org/final-print/jun2020/Gpu-accelerated-Optimization-Of-Block-Lanczos-Solver-For-Sparse-Linear-System.pdf}",
+        JOURNAL = "International Journal of Scientific and Technology Research",
+        YEAR = "2020",
+        MONTH = "June",
         ANNOTE =  ""
 }
 
@@ -43,78 +49,85 @@
 }
 
 
-@MISC {pomerance:tts,
+@ARTICLE {pomerance:tts,
         AUTHOR = "Carl Pomerance",
         TITLE = "A Tale of Two Sieves",
-        HOWPUBLISHED = "http://www.cs.umd.edu/~gasarch/TOPICS/factoring/two-sieves.pdf",
+        JOURNAL = "American Mathematical Society",
+        YEAR = "1996",
+        MONTH = "December",
         ANNOTE =  ""
 }
 
-@MISC {yang:wiedemann,
+@ARTICLE {yang:wiedemann,
         AUTHOR = "Laurance T. Yang, Gaoyuan Huang, Jun Feng, Li Xu",
         TITLE = "Parallel GNFS algorithm integrated with parallel block Wiedemann algorithm for RSA security in cloud computing",
-        HOWPUBLISHED = "\url{https://www.sciencedirect.com/science/article/abs/pii/S0020025516312348}",
+        JOURNAL = "Information Sciences",
+        YEAR = "2017",
+        MONTH = "May",
         ANNOTE =  ""
 }
 
 
-@MISC {kim:simdQS,
+@ARTICLE {kim:simdQS,
         AUTHOR = "Yang-Hee Kim",
         TITLE = "Parallel Factorization using Quadratic Sieve Algorithm on SIMD machines",
-        HOWPUBLISHED = "\url{https://www.koreascience.or.kr/article/JAKO200111920775507.pdf}",
+        JOURNAL = "Korea Information Processing Society",
+        YEAR = "2001",
+        MONTH = "March",
         ANNOTE =  "
           "
 }
 
 
 
-@MISC {tordable:intmapreduce,
+@ARTICLE {tordable:intmapreduce,
         AUTHOR = "Javier Tordable",
         TITLE = "MapReduce For Integer Factorization",
-        HOWPUBLISHED = "\url{https://arxiv.org/pdf/1001.0421.pdf}",
+        JOURNAL = "arXiv",
+        YEAR = "2010",
+        MONTH = "January",
         ANNOTE =  "
           "
 }
 
-@MISC {nguyen:hadoop,
+@ARTICLE {nguyen:hadoop,
         AUTHOR = "Son T. Nguyen Semere Tsehaye Ghebregiorgish Nour Alabbasi and Chunming Rong",
         TITLE = "Integer Factorization Using Hadoop",
-        HOWPUBLISHED = "\url{https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=6133206&tag=1}",
+        JOURNAL = "International Conference on Cloud Computing Technology and Science",
+        YEAR = "2012",
+        MONTH = "January",
         ANNOTE =  "
           "
 }
 
-@MISC {ying:improvedlanczos,
+@ARTICLE {ying:improvedlanczos,
         AUTHOR = "Wenjuan Ying",
         TITLE = "An Improved Block Lanczos Algorithm to Solve Large and Sparse Matrixes on GPUs",
-        HOWPUBLISHED = "\url{https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=6746440}",
+        JOURNAL = "Ninth International Conference on Computional Intelligence and Security",
+        YEAR = "2013",
+        MONTH = "December",
         ANNOTE =  "
           "
 }
 
-@MISC {sengupta:simdparallel,
+@ARTICLE {sengupta:simdparallel,
         AUTHOR = "Binanda Sengupta and Abhijit Das",
         TITLE = "Use of SIMD-based data parallelism to speed up sieving in integer-factoring algorithms",
-        HOWPUBLISHED = "\url{https://www.sciencedirect.com/science/article/abs/pii/S0096300316305148}",
+        JOURNAL = "Applied Mathematic and Computation",
+        YEAR = "2017",
+        MONTH = "January",
         ANNOTE =  "
           "
 }
 
 
-@MISC {jahenbaksh:mpiQS,
+@ARTICLE {jahenbaksh:mpiQS,
         AUTHOR = "Kazem Jahenbakhsh and Jason Papadopoulos",
         TITLE = "An Efficient Parallel Implementation of Self Initialization Quadratic Sieve for Integer Factorizations Using Message Passing Interface (MPI)",
-        HOWPUBLISHED = "\url{http://kazemjahanbakhsh.com/docs/Parallel_SIQS.pdf}",
-        ANNOTE =  "
-          "
-}
-
-@MISC {sengupta:simdparallel,
-        AUTHOR = "Kazem Jahenbakhsh and Jason Papadopoulos",
-        TITLE = "An Efficient Parallel Implementation of Self Initialization Quadratic Sieve for Integer Factorizations Using Message Passing Interface (MPI)",
-        HOWPUBLISHED = "\url{http://kazemjahanbakhsh.com/docs/Parallel_SIQS.pdf}",
-        ANNOTE =  "
-          "
+        JOURNAL = "Proceedings of 14th Iranian Conference on Electrical Engineering",
+        YEAR = "2006",
+        MONTH = "May",
+        ANNOTE =  ""
 }
 
 
@@ -175,17 +188,17 @@
         AUTHOR = "Steve Plimpton and Karen Devine",
         TITLE = "MapReduce-MPI Library",
         HOWPUBLISHED = "\url{https://sjplimp.github.io/mapreduce/}",
-        ANNOTE =  "
-          "
+        ANNOTE =  ""
 }
 
 
-@MISC {hoefler:mpimr,
+@BOOK {hoefler:mpimr,
+        KEY = "mpimr",
         AUTHOR = "Torsten Hoefler, Andrew Lumsdaine, and Jack Dongarra",
         TITLE = "Towards Efficient MapReduce Using MPI",
-        HOWPUBLISHED = "\url{https://htor.inf.ethz.ch/publications/img/hoefler-map-reduce-mpi.pdf}",
-        ANNOTE =  "
-          "
+        PUBLISHER = "Springer",
+        YEAR = "2009",
+        ANNOTE =  ""
 }
 
 @MISC {cohen:gaussian,
@@ -196,10 +209,11 @@
           "
 }
 
-@MISC {flesch:lanczos,
+@ARTICLE {flesch:lanczos,
         AUTHOR = "Ildiko Flesch",
         TITLE = "A New Parallel Approach to the Block Lanczos Algorithm for Finding Nullspaces over GF(2)",
-        HOWPUBLISHED = "\url{https://webspace.science.uu.nl/~bisse101/Theses/flesch02.pdf}",
+        JOURNAL = "International Conference on High-Performance Computing",
+        YEAR = "2006",
         ANNOTE =  "
           "
 }
