@@ -1,8 +1,8 @@
 % this is an example bibtex file, there are different types of entries
 % each with different format requirements
-% the most commonly used are book, inproceedings, article, and misc 
+% the most commonly used are book, inproceedings, article, and misc
 % annotate is used to add comments about the work to the .bib file
-% entries (its contents will not show up in the References section) 
+% entries (its contents will not show up in the References section)
 % see http://www.bibtex.org/ for lots more information
 
 
@@ -12,14 +12,36 @@
 % anything I put in { } will be translated as is (this is how I can
 % force capitaliziation), anything in "" will be capitalize based on
 % the whim of bibtex
-@MISC{asbrink:parallelqs, 
+
+@MISC{asbrink:parallelqs,
   author = "Olof Asbrink and Joel Brynielsson",
   title = "Factoring large integers using parallel Quadratic Sieve",
-  HOWPUBLIED = "https://www.csc.kth.se/~joel/qs.pdf",
-  MONTH = April,
-  YEAR = 2000,
-  
-} 
+  HOWPUBLISHED = "https://www.csc.kth.se/~joel/qs.pdf",
+  ANNOTE = ""
+
+}
+
+@MISC {hoffstein:cryptography,
+        AUTHOR = "Jeffrey Hoffstein, Jill Pipher, Joseph H. Silverman",
+        TITLE = "An Introduction to Mathematical Cryptography",
+        HOWPUBLISHED = "Springer",
+        ANNOTE =  ""
+}
+
+@MISC {verma:cudampilanczos,
+        AUTHOR = "Prashant Verma Kapil Sharma",
+        TITLE = "GPU-Accelerated Optimization Of Block Lanczos Solver For Sparse Linear System",
+        HOWPUBLISHED = "\url{https://www.ijstr.org/final-print/jun2020/Gpu-accelerated-Optimization-Of-Block-Lanczos-Solver-For-Sparse-Linear-System.pdf}",
+        ANNOTE =  ""
+}
+
+@MISC {lifchitz:rsa_break,
+        AUTHOR = "Renaud Lifchitz",
+        TITLE = "15 Ways to break RSA security",
+        HOWPUBLISHED = "\url{https://speakerdeck.com/rlifchitz/15-ways-to-break-rsa-security}",
+        ANNOTE =  ""
+}
+
 
 @MISC {pomerance:tts,
         AUTHOR = "Carl Pomerance",
@@ -55,7 +77,7 @@
 }
 
 @MISC {nguyen:hadoop,
-        AUTHOR = "Son T. Nguyen, Semere Tsehaye Ghebregiorgish, Nour Alabbasi, and Chunming Rong",
+        AUTHOR = "Son T. Nguyen Semere Tsehaye Ghebregiorgish Nour Alabbasi and Chunming Rong",
         TITLE = "Integer Factorization Using Hadoop",
         HOWPUBLISHED = "\url{https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=6133206&tag=1}",
         ANNOTE =  "
@@ -167,7 +189,7 @@
 }
 
 @MISC {cohen:gaussian,
-        AUTHOR = "Vardit Cohen, Brian Hillman, and Kyle Suarez",
+        AUTHOR = "Vardit Cohen Brian Hillman and Kyle Suarez",
         TITLE = "Linear Algebra: Gaussian Elimination",
         HOWPUBLISHED = "\url{https://people.cs.rutgers.edu/~venugopa/parallel_summer2012/ge.html#mpi_ge}",
         ANNOTE =  "
@@ -184,18 +206,8 @@
 
 @MISC {wozniak:lanczos,
         AUTHOR = "Jan Wozniak",
-        TITLE = "lanczos",
+        TITLE = "lanczos parallel implementation",
         HOWPUBLISHED = "\url{https://github.com/wozniakjan/KRY/tree/master/RSA/src/msieve/common/lanczos}",
         ANNOTE =  "
           "
 }
-
-
-
-
-
-
-
-
-
-

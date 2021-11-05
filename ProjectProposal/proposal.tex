@@ -1,14 +1,14 @@
 % this is a comment in latex
 % substitute this documentclass definition for uncommented one
 % to switch between single and double column mode
-%\documentclass[11pt,twocolumn]{article}
-\documentclass[11pt]{article}
+\documentclass[11pt,twocolumn]{article}
+%\documentclass[11pt]{article}
 
 % use some other pre-defined class definitions for the style of this
-% document.   
-% The .cls and .sty files typically contain comments on how to use them 
-% in your latex document.  For example, if you look at psfig.sty, the 
-% file contains comments that summarize commands implemented by this style 
+% document.
+% The .cls and .sty files typically contain comments on how to use them
+% in your latex document.  For example, if you look at psfig.sty, the
+% file contains comments that summarize commands implemented by this style
 % file and how to use them.
 % files are in: /usr/share/texlive/texmf-dist/tex/latex/preprint/
 \usepackage{fullpage}
@@ -47,73 +47,76 @@
 % for an article class document, there are some pre-defined types
 % for formatting certain content: title, author, abstract, section
 
-\title{CS87 Project Proposal: A Concise and Meaningful Title}
+\title{CUDA-aware MPI Parallelization of Quadratic Sieve to Break RSA: Implementation and Performance Evaluation}
 
-\author{Author1, Author2, Author3, Author 4 \\ 
+\author{Tarang Saluja, Tai Thongthai \\
 Computer Science Department, Swarthmore College, Swarthmore, PA  19081}
 
 \maketitle
 
-\section {Introduction}\label{intro} 
-A 1-2 paragraph summary of the problem you are solving, why it is interesting,
-how you are solving it, and what conclusions 
-you expect to draw from your work.
+\section {Introduction}\label{intro}
+RSA is an asymmetric, public key cryptosystem that is widely used to encrypt and protect small pieces of data. As an asymmetric cryptosystem, one player, let us say Alice, has a public key and the private key. The public key uses a corresponding encryption function $e : \mathcal{M} \to \mathcal{C}$ to encrypt the message, and the private key uses a corresponding decryption function $d: \mathcal{C} \to \mathcal{M}$ to decrypt the message, such that $d(e(m)) = m$. Now suppose that Alice publishes her public key and keeps their private key secret. Now Bob has access to the published public key and can send $e(m)$ to Alice. Since Alice has the private key, she can use the decryption function to retrieve $d(e(m)) = m$. \\
+\indent In the case of RSA encryption with large prime numbers, the public key is the set $\{N, e \}$ such that $N = pq$ and $e < \varphi(N) = (p-1)(q-1)$ for large $p, q$, and the private key is some $d$ such that $ed \equiv 1 \pmod{\varphi(N)}$. Given that Alice publishes the public key, Bob can use that information to send Alice $c \equiv m^e \pmod{N}$. Since Alice has $d$, it follows from the fact that $ed \equiv 1 \pmod{\varphi(N)}$ and Euler's Theorem that Alice can find $c^d \equiv m^{ed} \equiv m^{\varphi(N)k  + 1} (m^{\varphi(N)})^k \cdot m \equiv 1 \cdot m \pmod{N}$, which is the original message so long as $m < N$ and $\gcd(m, N) = 1$ (a condition for Euler's Theorem). Bob must be careful to send $m < N$, and $\gcd(m, N) = 1$ has probability $\frac{\phi(N)}{N} = 1 - \frac{1}{p} - \frac{1}{q}$, which is a very high probability for large $p$ and $q$.\\
+\indent An eavesdropper, Eve, would be able to break this if she could figure out the value of $d$ in a feasible amount of time. However, Eve needs to know $\varphi(N) = (p-1)(q-1)$, for which Eve would need to factor $N$, to find $d$ in a feasible amount of time. Since it is difficult to factor large $N$, RSA is a relatively secure cryptosystem \cite{hoffstein:cryptography}. However, heightened computing power, negligence, and creative attack algorithms make it possible to attack RSA encryption \cite{lifchitz:rsa_break}. We are interested in using ideas from parallel and distributed computing to further optimize the Quadratic Sieve attack method. As outlined in A Tale of Two Sieves \cite{pomerance:tts}, the Quadratic Sieve method has the following steps:
+
+\begin{enumerate}
+    \item Generating a factor base, which is a set of prime powers for primes less than some $B$.
+    \item Sieving is finding complete factorizations of $T^2 - N$ over the factor base for $T$ in a given range. Then $T^2 \equiv p_1^{e_1} p_2^{e_2} \ldots p_n^{e_n} \pmod{N}$
+    \item Linear algebra is used to find solutions such that $\left( \displaystyle \prod_{i = 1}^k T_k \right)^2 = p_1^{2e_1} p_2^{2e_2} \ldots p_n^{2e_n} \pmod{N}$
+\end{enumerate}
+
+Given such a solution, we have $a^2 \equiv b^2 \pmod{N} $, which means that $(a+b)(a-b) \equiv 0 \pmod{N}$, and so computing $\gcd(N, a \pm b)$ may yield a factorization \cite{hoffstein:cryptography}. We hope to find that parallelizing Quadratic Sieve with the GPU's compute power and the shared memory abstraction from message passing will help us increase the speed of how quickly we can factor large numbers and also help us factor even larger numbers in a feasible amount of time.
+
 
 \section {Related Work}\label{rel}
-1-2 paragraphs describing similar approaches to the one you propose. This need
-not be an exhaustive summary of related literature, but should be used to put
-your solution in context and/or to support your solution. This is also a good
-way to motivate your work. This can be a summary taken from your longer
-annotated bibliography.  
-
-Here is an example of how to cite someting from the bib 
-file~\cite{newhall:nswap2L}.  Here is another~\cite{unixV}.  
-The proposal.bib file has some example 
-bibtex entries you can use as a guide for entering your own.
-
-In the Annotated Bibliography~\ref{annon} you will included an expanded description of your related work (and you should cite there as well.
+In 2000, Asbrink and Brynielsson used a boss/worker model with MPI to parallelize sieving. Each node sieves designated intervals until it has accumulated a set amount of relations and then sends the relations to the master node. The master relations either replies with a confirmation (in which the node continues to sieve), or tells the node to terminate. The master node uses Gaussian elimination to find solutions, which are then tested to find a prime factor. Asbrink and Brynielsson noted that using MPI-Send and MPI-Recv  with blocking to deal with each process can cause inefficiencies, and also noted that maybe group communcation and functions for virtual topologies (like MPI-Scatter or MPI-Gather) for MPI could lead to a better approach \cite{asbrink:parallelqs}. There is an available MPQS implementation that is based on the QS implementation in this paper \cite{bytopia:help}, and Papadoupoulous implemented an msieve library with tools which can be used to do steps or even all of MPQS \cite{papadopoulos:msieve}. Unlike Asbrink and Brynielsson, Jahanbakhsh and Papadoupoulos describe in a paper how each node sends the master the relations only once the designated amount of relations have been computed \cite{jahenbaksh:mpiQS}. In 2010, Tordable described how QS can be couched in the MapReduce paradigm \cite{tordable:intmapreduce}, and a paper describing a corresponding, improved Hadoop implementation was published in 2001. Despite noting the advantage of distributed data collection from sieving, they do not have an implementation \cite{nguyen:hadoop}. A MPI-MR library can allow us to use MPI and the Map Reduce paradigm simultaneously \cite{plimpton:mpimr}. \\
+\indent A CUDA implementation in 2016 for an undergraduate project by Pavan parallelizes pre-processing steps: the computations of $T^2 - N$, checking whether there exists a solution to $T^2 \equiv N \pmod{p}$, and then using Tonelli-Shanks to find the two solutions to the equation (from which we can extrapolate the rest in the sieving intervals). Pavan implements the Tonelli-Shanks algorithm in parallel with CUDA and achieved 5x speed-up when using the GPU instead of the CPU \cite{pavan:parallelgpu}.  Furthermore, while Asbrink and Brynielsson has the master perform Gaussian elimination on the result, the Block Lanczos and Block Wiedemann matrix processing algorithms specialize at solving a sparse system, which is precisely what is passed into the linear algebra step. In 2017, a paper described a CUDA-aware MPI approach and implementation for solving sparse systems with Block Lanczos which offers promising speed-up to the linear algebra step \cite{verma:cudampilanczos}. Other papers and people have parallelized Block Wiedemann, Block Lanczos, or simply Gaussian Elimination with different methods \cite{flesch:lanczos} \cite{cohen:gaussian} \cite{wozniak:lanczos}.
 
 \section {Your Solution}\label{soln}
-3-4 paragraphs describing what you plan to do, how you plan to do it, how it
-solves the problem, and what types of conclusions you expect to draw from your
-work.
+Our solution will be broken into three main steps, and a last trivial. The first step we call the factor base generation step. The second step we call the sieving step. The third step we call the linear algebra step. The last step is where we find the prime factors, p and q, of N.
+
+Step 1: Our input is a large number N, which is a product of two large primes p and q. Our objective is to figure out what p and q are. Our step one output will be our factor base array, and our polynomial array, both of which will be explained in this paragraph. Our factor base will be an array of prime powers, where the size of the factor base will be $B = (e^{\sqrt{ln(N)*ln(ln(N))}})^{\sqrt{2}}$ \cite{hoffstein:cryptography}.
+Let $Q(T) = T^2 - N$ be our polynomial. We will generate our initial polynomial array by sequentially plugging in different $x_l \leq x_i \leq x_u$ such that $Q(x_i) \geq 0$ and $x_u$ is sufficiently large. Next, we will refine and
+reduce our factor base array. We do this because in our sieving step, we will be dividing each element in the polynomial array with each prime power (we only divide if the prime power in question is able to divide the polynomial element in question); we do not want to waste time in the sieving step having to compute  whether a prime will divide a polynomial element. Thus, we check if each element $p_j$ in our initial factor base fulfills the condition $x_i^2 \equiv N \pmod{p_j}$. If it does not, we remove $p$ and all its powers from the factor base. If it does, we say that it is a quadratic residue, and we run the Shank-Tonelli's Algorithm. Shank-Tonelli's algorithm gives us the two solutions $a$ and $b$, and numbers of the form $a+pk$ and $b+pk$, that solves our polynomial function such that it can be divided by our aforementioned $p_j$. This will become useful in our sieving step. Because we are performing the same check on each $p_j$'s, we can parallelize this process with CUDA, simultaneously checking every $p_j$'s in GPU memory. We will save our results in a file.
+
+
+Step 2: Loading the output from step one as input, we perform our sieving step. The outputs for step two will be a bit-matrix, an exponent matrix, and our polynomial array. The basic idea of the sieving step is to find as many smooth numbers as possible, and their factorization into prime powers from the factor base. A number is considered smooth if we are able to express as a product of the numbers in the factor base.
+
+We do this by continually dividing each element in our polynomial array with each element in our refined factor base array, until we get a sufficient amount of our polynomial numbers to become the integer one (we call these smooth polynomial relations). Thanks to the Shank-Tonelli's algorithm performed in the previous step, we know exactly which primes will divide with polynomials, speeding up our sieving step. Theoretically we could parallelize this using CUDA, but given a non-trivial N, the polynomial array will be very large, and memory management will become too complicated. Thus we parallelize this with the aid of MPI. As suggested in Asbrink's paper, we will have one master node (assigned rank 0) and multiple worker nodes. The master node will cyclically distribute the polynomial array to the worker nodes based on their ranks (for example if there are 16 worker nodes, worker 1 will receive elements 0, 15, 31... of the polynomial array) \cite{asbrink:parallelqs}. We do this because the polynomial array is sorted in ascending order (smaller indexes have smaller values). If we were to divide and assign the arrays to the workers contiguously, worker 1 would be done sieving much faster than a worker with a larger rank. Each worker node will sieve until they have found $\frac{B+10}{numprocesses}$ relations, at which point the worker node will communicate to the master node that they have reached their sieving goal. The master node will either tell them to stop, or tell them to continue. The master node will want at least $B+10$ relations (Given a 50 \% probability of receiving a trivial solution, $B+10$ relations should yield at least a $1 - \left(\frac{1}{2} \right)^{10} = \frac{1023}{1024}$ probability of finding the prime factors for N \cite{asbrink:parallelqs}).
+
+Once the master has determined that enough relations have been found, it will start the aggregation and data processing process. Traditionally this can be done simply by having every worker node send their results to the master node. The results being an array of the relations (elements from the polynomial that we have found to be smooth), their corresponding exponents matrix, and their corresponding bit matrix. Each column of the exponents matrix corresponds to each element in the relations array, and each row of the exponents matrix corresponds to a prime, in ascending order (i.e. 2, 3, 5, 7 ...). Element $EXPO[i][j]$ is the exponent of the $j^{th}$ prime, which is a factor of relations $R[i]$. The bit matrix corresponds directly the exponents matrix, where odd integers in the exponents matrix gets mapped to 1 in the bit matrix, and the even integers in the exponents matrix gets mapped to 0 in the bit matrix (we will see why this is useful in the third step). All these results gets sent to the master, and the master will merge all the results from the worker nodes. Although we could do it by just sending it to the master, this can cause a non-trivial amount of overhead cost, as all of the workers are sending to a single node. We could instead implement a map-reduce framework, where the workers, once having made a designated amount of progress with their work, map their result and save it in an intermediate storage, then we reduce these intermediate results before sending it to the master.
+
+Step 3: Our input for our linear algebra step will be the bit matrix, the exponents matrix, and our relations array (outputs from our previous step). The output will be a set of "instruction arrays," which tells us what linear combinations of the exponents columns and their corresponding relations we will use in our final step. The output will be explained further. Now we will explain the basic idea of this step: recall the relationship between the exponents matrix and the relations array; the columns of the exponents matrix are the exponents of the prime factors of the corresponding relations array element. Thus a linear combination of the columns of the exponents matrix is tantamount to the multiplication of the relation equations (i.e. $T_i = p_1^{e_1} p_2^{e_2} \ldots p_n^{e_n} \pmod{N}$ where $T_i$ is an element from the relations array, and the $p$'s are the prime numbers that are factors of the relation). In this step we want to find linear combinations of these relations array that will create perfect squares, meaning that the exponents on the primes are all even. Using our bit matrix, we can simplify this process: instead of having to find linear combination of the columns of the exponents matrix, such that the elements of the linear combination is all even, we can just find a linear combination of columns of the bit matrix such that all the elements evaluate to $0$ over $GF(2)$. From this, we extract an array of ones and zeros, which tells us which columns in the exponents matrix to linearly combine and which elements in the relations array to multiply, which we call the instruction array. We will take 10 such instruction arrays.
+
+We can achieve this process in parallel by either parallelizing the Gaussian Elimination algorithm, or using the Block-Lanczos algorithm. We will not be digging into the details of how these algorithms work because it is an extensive project to understand it. That being said, we may try to implement a CUDA-aware MPI version with pseudocode from a paper if time permits, otherwise we'll just take the solver from msieve \cite{papadopoulos:msieve} or an existing Gaussian elimination implementation \cite{cohen:gaussian}.
+
+At the end of this process, we will have a set of instruction arrays which we can use to find relations $(T_1 T_2 \ldots T_k)^2 = (p_1^{e_1} p_2^{e_2} \ldots p_n^{e_n})^2 \pmod{N}$.
+
+Step 4: As outlined in the introduction, we will now find $\gcd(N, T_1 T_2 \ldots T_k - p_1^{e_1} p_2^{e_2} \ldots p_n^{e_n})$, and we can use Euclid's algorithm for that. We will repeat as many times as needed until we find the factorization.
+
 
 \section {Experiments}\label{exper}
-1-3 paragraphs describing how you plan to evaluate your work. List the
-experiments you will perform. For each experiment, explain how you will perform
-it and what the results will show (explain why you are performing a particular
-test).
+We will not implement RSA ourselves, but rather use an accepted implementation to encrypt a test file with a chosen p and q. We will use various encrypted file to run bench mark tests. We want to choose our key length to be the same as some of the papers to see if our modifications have made an improvement upon their work.
+
+We also want to implement a sequential version of QS to see if our parallel version will do better. And lastly we want test one version with map reduce, and another version without map reduce in our sieving step to see if there are any significant improvements. As such, the three types of implementations that we are comparing is sequential, boss/worker as implemented by Asbrink, and then boss/worker with MapReduce. As our base implementation is what was done by Asrbink, we will use similarly large numbers as them in our experiments (namely product of primes that are 45, 50, 55, 60, 65, and 70) digits long, and we expect runs to range from as little as around 15 minutes to around 300 minutes as reported in their paper (and then more for our 70 digit runs) \cite{asbrink:parallelqs}. We will do several trials in two different computer systems (it depends on what we have access to) so that we can compare how different computer structures affect our runtimes as well.
 
 \section {Equipment Needed}\label{equip}
-1 paragraph listing any software tools that you will need to implement and/or
-test your work. If you need to have software installed to implement your
-project, you should check with the systems lab to see if it is something that
-can be installed on the CS lab machines.
+We need CUDA, MPI, MPIMR (MPI Map Reduce Library), Strellka or Bridges, and as many CS machines as we could possibly get a hold of. There are promising examples in the MPIMR library which we can use to implement the MapReduce framework. However, if it does not work, we can built it ourselves using MPIScatter and MPIGather. CUDA and MPI are important elements of parallelization, and access to Strelka, Bridges, and CS machines is what will allow us to run our experiments.
 
 \section {Schedule}\label{sched}
-list the specific steps that you will take to complete your project, include
-dates and milestones. This is particularly important to help keep you on track,
-and to ensure that if you run into difficulties completing your entire project,
-you have at least implemented steps along the way. Also, this is a great way to
-get specific feedback from me about what you plan to do and how you plan to do
-it.  
-
-
-
-% here is an example of a numbered list 
 \begin{my_enumerate}
-  \item Week 9, Nov. 1: what we planned, what we did 
-  \item Week 10, Nov. 8: 
-  \item Week 11, Nov. 15: 
-  \item Week 12, Nov. 22: 
-  \item Week 13, Nov. 29: 
-  \item Week 14, Dec. 06: 
-  \item Week 15, Dec. 13: 
-\end{my_enumerate} 
+  \item Week 9, Nov. 1: Find all necessary benchmark values for computation (how many elements in factor base, how many elements to find. etc.) and write pseudocode for sequential implementation with actual values.
+  \item Week 10, Nov. 8: Implement a sequential version of Quadratic Sieve.
+  \item Week 11, Nov. 15: Implement MPI parallelization with boss/worker and then MPI scatter/reduce or MR library.
+  \item Week 12, Nov. 22: Implement pre-processing and the Shanks-Tonnelli algorithm for GPU with CUDA and try out some optimizations.
+  \item Week 13, Nov. 29: Parallelize the chosen matrix-solver algorithm, most likely the Lanczos-Solver OR continue with MPI scatter/reduce.
+  \item Week 14, Dec. 06: Run large scale tests to see improvements in algorithm speed-up and size of numbers which can be factored.
+  \item Week 15, Dec. 13: Finish running large scale tests and general buffer for mishaps along the way.
+\end{my_enumerate}
 
+Note: Work on final report and presentation as we go along so that there is no stress about it near the end of the project. While our aim is this schedule, we understand that we may have to skip perhaps one of Week 12 or Week 13. However, it is also possible (and our goal) that we will be able to implement a decentralized parallelization for the sieving step which uses the Map Reduce paradigm and the MPI-MR library.
 
-Conclusions: 1 paragraph summary of what you are doing, why, how, and what
-you hope to demonstrate through your work.
+\section{Conclusions} \label{conc}: Our project's aim is to find something about what kind of parallelizations will help us factor large products of two primes faster and therefore develop a more general and holistic understanding of where parallelization can be helpful. We will achieve this by synthesizing ideas, implementations, and strategies from various explorations into using parallel programming for QS (and also MPQS) and pushing forward with ideas which are suggested in other papers. With this, we hope to demonstrate in a smaller sense that we are able to use the tools we explored in class for larger project which can navigate between them. In a larger sense, we hope that we will demonstrate that combining different techniques for parallelization in a way that respects their strengths and specific utilities will achieve a good result.
 
 % The References section is auto generated by specifying the .bib file
 % containing bibtex entries, and the style I want to use (plain)
@@ -124,14 +127,49 @@ you hope to demonstrate through your work.
 \bibliographystyle{plain}
 
 % force a page break
-\newpage 
+\newpage
 
 % I want the Annotated Bib to be single column pages
 \onecolumn
-\section*{Annotated Bibliography}\label{annon} 
+\section*{Annotated Bibliography}\label{annon}
 
-This section does not count towards the page total for your proposal.
+\textbf{Olof Asbrink and Joel Brynielsson. Factor-
+ing large integers using parallel quadratic
+and size of numbers which can be factored.
+sieve. https://www.csc.kth.se/ joel/qs.pdf.} \\
+
+\indent This paper describes quadratic sieve, the parallelization of the sieving stage with MPI, possible improvements, and the results. After describing the quadratic sieve algorithm, defining terminology, providing information about the likelihood of finding trivial solutions, and suggesting ways to optimize the sieving process, the paper discusses the parallel implementation of Quadratic Sieve. It suggests that the sieving portion is the "heavy" part and is thus most important and also most suited to parallelization. Their parallel implementation uses a boss/worker model in which the boss communicates with all the workers and the workers don't communicate with one another. While each of the nodes computes the factor base on their own because all of them need it before sieving and also perform the linear algebra step on their own, the sieving step is distributed. In particular, sieving interval is divided into some number of blocks, and the $i^{th}$ process sieves over the $i^{th}$ block so that all processes get a comparable arrangement of large and small numbers. Once a node has found a designated number of relations, it uses a synchronized blocking send to the master node. In response, the master node tells the node to terminate if it has enough relations, and it sends the node a confirmation if it needs more relations. Once the node starts using Gaussian elimination to find a solutions from the relations, the other nodes have to wait until Gaussian elimination is complete to receive the termination instruction. The authors note that the blocking sending/receiving can cause a worker node to be blocked unnecessary and ponder whether a more decentralized approach might perform better. The performance evaluation yields that using too many workers can lead to increase execution times due to initializing MPI, and the algorithm overall showed up speedup.
+
+This paper gives a framework for how we can use MPI to parallelize step two of quadratic sieve by describing a specific boss/worker model which previously showed desirable speedup. Not only does it give us an immediate framework that we can implement, but it also points out some of the difficulties which we can try to address in paper. In particular, it encourages to consider how we can further optimize the boss/worker model and/or working around the blocking behavior which has the potential to waste valuable CPU time. It also provides us with a framework for how to compare our speed-up with the sequential implementation benchmark comparisons. \\
+
+\textbf{Javier Tordable. Mapreduce for integer
+factorization.
+https://arxiv.org/pdf/
+1001.0421.pdf..} \\
+
+After introducing the importance of integer factorization for the analysis of cryptographic frameworks, this paper provides a formal presentation of the MapReduce which we covered in class with the paper by Ghemawat and quadratic sieve. The paper introduces an implementation of Quadratic Sieve with Hadoop, which is an open source implementation of a MapReduce framework in Java. Tordable relates the QS algorithm with the MapReduce framework by describing the controller as the boss job which generates the factor base and the interval which is to be sieved, and it then splits the interval into pieces that are distributed to be sieved. The mapping corresponds to the sieving process, and the reducing corresponds to the linear algebra step. Tordable provides evaluation results which indicate that for medium-sized problems, the MapReduce may be more efficient. \\
+\indent We have seen that a MapReduce framework provides various techniques to improve the efficiency and speed-up of a parallelized program, and this paper shows us how such a framework can apply to integer factorization. Given that quadratic sieve requires processing of very large amounts of data (namely the elements of the sieving interval), such a MapReduce framework might be suitable for it. That being said, the MapReduce framework does have initialization costs, and so it may or may not be better than the more typical boss/worker model which avoids those initialization costs may also have far more overhead. A Map/Reduce framework also opens the possibility of doing a distributed linear algebra solve without one node gathering all of the relations, but that is difficult because there are often dependencies among vectors which are stored in different nodes. \\
+
+\textbf{KV Krishna Pavan.
+Parallel crypt-
+analysis using nvidia gpus.
+https:
+//www.academia.edu/33287123/
+An efficient implementation of
+Quadratic Sieve Algorithm on GPUs.}
+This project report describes quadratic sieve, the parallelization of pre-processing stages with CUDA, possible improvements, and the results. After it describes the quadratic sieve algorithm, it provides information about the system, the implementation, provides results, and suggests how to improve the project. Pavan's implementation uses NVIDIA's CUDA, a minimal extension to C/C++, to take advantage of the GPU's compute power. The algorithm implemented by Pavan uses the GPU to compute the factor base and implement Tonelli-Shanks, and found a 5x speed-up, suggesting that the first step, while not taking a large part of the total computation time, can be further optimized. \\
+\indent This project report gives code and revelations for how the GPU can be used for small-scale optimizations at various places in the program, in this case at the very beginning. While the earlier step is not as significant as a sieving step, it can still be a significant improvement for an algorithm of this length and does not compromise whatever parallelization is implemented for the sieving step. With included code for the implementation, we can start by using this and seeing what kind of speed-up it gives us for our purposes. After that we can see if the implementation can be refined and improved.
+
+\textbf{Prashant Verma Kapil Sharma.
+Gpu-
+accelerated optimization of block lanczos
+solver for sparse linear system. https://www.ijstr.org/final-print/jun2020/
+Gpu-accelerated-Optimization-Of-Block-Lanczos-Sol
+pdf.}
+
+This paper notes that solving a sparse system of linear equations over a some finite field can be challenging but an important part of crypt-analytic techniques. Along with the Block Wiedemann algorithm, which has been paralleized, the Block Lanczos is a fairly costly algorithm which can be used to solve these linear equations. As such, the paper proposes an implementation of Block Lanczos with GPUs which utilizes multi-node and/or multi-GPU systems by using MPI message passing. The paper mentions that for sparse matrices with many repeated elements, the main challenge is figure out how to store it in a way that saves memory. Their proposal is to have a MIMD block Lanczos solver, which means that it is run with a cluster of nodes, all of which have at least one GPU. The paper suggests that we store non-zero entry indices or each row and then use bitwise operations for the computation. The fundamental methodology which they propose is to remove linearly dependent equations and then solve the equation. In particular, each process reads a given number of rows, the product of a matrix and vector is done in the GPU, and then broadcast is used to share dependencies. The other processors modify their matrices accordingly. \\
+\indent This recent paper gives a framework for how we can use CUDA-aware MPI to not only optimize the step with the Block Lanczos algorithm, which specifically solves sparse systems, but also do the last step in parallel. This could actually allow us to complete the last stage in parallel without the master node having to gather all the other nodes, which means that it is possible that this is an avenue to a decentralized implementation of MPI. However, such an implementation does not seem to yet exist, and this paper was only recently proposed in 2020. The question we ask is whether it would be feasible for us to be able to implement such an algorithm. If possible, it would allow us to use a hybrid parallelism which increases speed-up and also opens the option of moving past the boss/worker model. It may be beyond our scope and the amount of time we can give to this project for us to understand the linear algebra step in detail, but we can surely see if we can make interesting progress with the pseudocode. \\
+
 
 
 \end{document}
-
