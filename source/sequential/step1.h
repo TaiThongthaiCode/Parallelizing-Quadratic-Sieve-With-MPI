@@ -16,5 +16,6 @@ using namespace std;
 
 #pragma once
 
-vector<mpz_t> getprimes(int l, mpz_t N);
+vector<mpz_t> getprimes(mpz_t l);
+vector<mpz_t> getprimesold(mpz_t l, mpz_t N);
 vector<mpz_t> removeNotQR(vector<mpz_t> primes, mpz_t n);

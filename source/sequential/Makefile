@@ -12,11 +12,10 @@ all: $(MAINPROG)
 
 # This target builds your main program.
 $(MAINPROG): $(MAINPROG).o
-	$(CXX) $(CXXFLAGS) -o $@ $(MAINPROG).o
-
+	$(CXX) $(CXXFLAGS) -o $@ $(MAINPROG).o -lgmpxx -lgmp 
 # This target describes how to compile a .o file from a .cpp file.
 %.o: %.cpp $(HFILES)
-	$(CXX) $(CXXFLAGS) -c -o $@ $<
+	$(CXX) $(CXXFLAGS) -c -o $@ $< 
 
 # This target deletes the temporary files we have built.
 .PHONY: clean all
