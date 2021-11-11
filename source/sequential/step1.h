@@ -7,9 +7,14 @@ Tai Thongthai and Tarang Saluja
 #include <stdio.h>
 #include <stdlib.h>
 #include <vector>
+#include <gmp.h>
+#include <stdarg.h>
+#include <obstack.h>
+
 
 using namespace std;
 
 #pragma once
 
-vector<int> getprimes(int l, int N);
+vector<mpz_t> getprimes(int l, mpz_t N);
+vector<mpz_t> removeNotQR(vector<mpz_t> primes, mpz_t n);
