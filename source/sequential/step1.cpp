@@ -23,73 +23,88 @@ int main(int argc, char *argv[]){
 
     //setting N
     mpz_t N;
-    mpz_init_set_ui(N, 69);
+    mpz_init(N);
+    mpz_set_str(N, "69", 10);
 
-    // setting e
-    mpf_t e;
-    mpf_init(e);
 
-    double param;
-    float te;
-    param = 1;
-    te = exp (param);
 
-    mpf_set_d(e, te);
+    size_t j = mpz_sizeinbase (N, 10);
 
-    //setting k
+    int size = static_cast<int>(j);
 
-    //setting l (Don't know how to get optimal value due to log constraint)
-    mpz_t l;
-    mpz_init(l);
-    mpz_mul(l, N, N); //setting l = N*N
+    int fbs, l;
+    if (size < 25) {
+      fbs = 150;
+    } else if (size < 50) {
+      fbs = 1560;
+    } else if (size < 75) {
+      fbs = 6000;
+    } else if (size < 100) {
+      fbs = 60000;
+    }
+    l = 2*fbs*log(2*fbs);
 
-    vector<mpz_t> primes = getprimes(l);
+    prime_element * primes = (prime_element *)calloc(fbs, sizeof(prime_element));
+    getprimes(l, N, primes);
+
+    for (int i = 0; i < fbs; i++){
+      cout << primes[i].p << endl;
+    }
 
 
     return 0;
 }
 
-vector<mpz_t> getprimes(mpz_t l){
-    vector<mpz_t> primes;
 
-    mpz_t currprime;
-    mpz_init(currprime);
-    mpz_set_ui(currprime, 2);
+/*
+Sieve of erectus
+*/
+void getprimes(int l, mpz_t N, prime_element * primes){
 
-    //base case, if the same
-    while (mpz_cmp_ui(l, 0) != 0) {
-        primes.push_back(currprime); //TODO COMPILER DOESN"T LIKE THIS LINE
-        mpz_sub_ui(l, l, 1); //l = l -1
-        mpz_nextprime(currprime, currprime); // get next prime and set to currprime
+    int idx = 0;
 
+    mpz_t pp;
+    mpz_init(pp);
+
+    bool *truth = new bool[l+1];
+    for (int i = 0; i < l+1; i++){
+        truth[i] = true;
     }
+    truth[0] = false;
+    truth[1] = false;
+    for (int i = 0; i*i < l; i++){
+        if (truth[i]){
+            for (int j=i*i; j<=l; j=j+i){
+                truth[j] = false;
+            }
+        }
+    }
+    for (int i = 1; i<l+1; i++){
+        if (truth[i]){
+            mpz_set_ui(pp, i);
 
-    return primes;
-
+            //if qr then shank tonelli 
+            if (mpz_legendre(N, pp)){
+              primes[idx].p = i;
+              idx++;
+            }
+        }
+    }
 }
 
 
-vector<mpz_t> getprimesold(mpz_t l, mpz_t N){
-    vector<mpz_t> primes;
-    // bool * truth = new bool[l+1];
-    // for (int i = 0; i < l+1; i++){
-    //     truth[i] = true;
-    // }
-    // truth[0] = false;
-    // truth[1] = false;
-    // for (int i = 0; i*i < l; i++){
-    //     if (truth[i]){
-    //         for (int j=i*i; j<=l; j=j+i){
-    //             truth[j] = false;
-    //         }
-    //     }
-    // }
-    // for (int i = 1; i<l+1; i++){
-    //     if (truth[i]){
-    //         primes.push_back(i);
-    //     }
-    // }
-    return primes;
+void shanktonellis(mpz_t N, mpz_t p){
+  int s = 0;
+  int q = p - 1;
+  while ((q & 1) == 0) {
+    q /= 2;
+    s++
+  }
+
+  if (s==1) {
+    int r = 
+  }
+
 }
 
 
