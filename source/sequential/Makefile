@@ -7,12 +7,20 @@ CXXFLAGS=-g -std=c++11 -Werror
 UNITTEST_LIB = -lUnitTest++
 
 MAINPROG = step1
+SIEVEPROG = step2
 
-all: $(MAINPROG)
+all: $(MAINPROG) $(SIEVEPROG)
 
 # This target builds your main program.
 $(MAINPROG): $(MAINPROG).o
 	$(CXX) $(CXXFLAGS) -o $@ $(MAINPROG).o -lgmpxx -lgmp 
+# This target describes how to compile a .o file from a .cpp file.
+%.o: %.cpp $(HFILES)
+	$(CXX) $(CXXFLAGS) -c -o $@ $< 
+
+# This target builds your main program.
+$(SIEVEPROG): $(SIEVEPROG).o
+	$(CXX) $(CXXFLAGS) -o $@ $(SIEVEPROG).o -lgmpxx -lgmp 
 # This target describes how to compile a .o file from a .cpp file.
 %.o: %.cpp $(HFILES)
 	$(CXX) $(CXXFLAGS) -c -o $@ $< 
