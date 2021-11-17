@@ -121,7 +121,7 @@ polynomial_element * generate_sieving_interval(mpz_t N){
 }
 
 relations * sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N){
-  mpz_t T, p, a, b;
+  mpz_t T, p, a, b, diff, idx1, r1, min1, min2;
   mpz_init_set_ui(T, 1);
   mpz_root(T, N, 2); // T = sqrt(N)
   mpz_add_ui(T, T, 1); //Buffer T by one to ensure non negativity
@@ -130,13 +130,35 @@ relations * sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N){
     mpz_init_set_ui(p, prime_element[i].p);
     mpz_init_set_ui(a, prime_element[i].a);
     mpz_init_set_ui(b, prime_element[i].b);
-    for (int j; j < polynomial_element.length(); j++){
-      mpz
+    mpz_sub(diff, a, b);
 
-      mpz_mod (mpz_t r, , const mpz_t d)
-      if mpz_mod() || (j - b + T + 1 % p == 0) ){
-        polynomial_element[j] = polynomial_element[j]/p;
+    for (int j; j < polynomial_element.length(); j++){
+      mpz_set_ui(idx1, j);
+      mpz_add(idx1, idx1, T);
+      mpz_add_ui(idx1, idx1, 1);
+      mpz_sub(idx1, idx1, a);
+      mpz_mod(r1, idx1, p);
+      if (r1 == 0){
+        min1 = idx1;
+      }
+      break;
     }
+
+    for (int j; j < polynomial_element.length(); j++){
+      mpz_set_ui(idx1, j);
+      mpz_add(idx1, idx1, T);
+      mpz_add_ui(idx1, idx1, 1);
+      mpz_sub(idx1, idx1, b);
+      mpz_mod(r1, idx1, p);
+
+      if (r1 == 0){
+        min2 = idx1;
+      }
+      break;
+    }
+
+    for (int j; j< polynomial_element.length(); j = j + p)
+
   }
 
 }
