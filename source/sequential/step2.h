@@ -25,3 +25,4 @@ struct polynomial_element {
 prime_element * load(mpz_t N);
 polynomial_element * generate_sieving_interval(mpz_t N);
 void sieve(polynomial_element * SI, prime_element * FB);
+relations* sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N);

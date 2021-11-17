@@ -19,7 +19,9 @@ Tai Thongthai and Tarang Saluja
 #include <obstack.h>
 
 
+
 #include "step2.h"
+
 
 
 int main(int argc, char *argv[]){
@@ -30,10 +32,13 @@ int main(int argc, char *argv[]){
     polynomial_element * SI = generate_sieving_interval(N);
     prime_element * FB = load(N);
 
-    // int size = 80000;
-    // for (int i = 0; i < size; i++) {
-    //     cout << SI[i].poly << endl;
-    // }
+
+    int size = 80000;
+    for (int i = 0; i < 150; i++) {
+        cout << FB[i].p << endl;
+        cout << FB[i].a << endl;
+        cout << FB[i].b << endl;
+    }
 
     return 0;
 }
@@ -60,15 +65,32 @@ prime_element * load(mpz_t N){
     if (myfile.is_open()){
         int idx = 0;
         while ( getline (myfile,line) ){
-            cout << line << endl;
+          char str_array[line.length()];
+          strcpy(str_array, line.c_str());
+          char* number = strtok(str_array, " ");
+          int item = 0;
+          while (number != NULL){
+            if (item == 0){
+                FB[idx].p = atoi(number);
+                item++;
+            } else if (item == 1) {
+                FB[idx].a = atoi(number);
+                item++;
+            } else if (item == 2) {
+                FB[idx].b = atoi(number);
+                item = 0;
+            }
+            number = strtok(NULL, " ");
+        }
+          idx++;
         }
         myfile.close();
     }
 
-    else cout << "Unable to open file"; 
+    else cout << "Unable to open file";
 
     return FB;
-    
+
 }
 
 polynomial_element * generate_sieving_interval(mpz_t N){
@@ -81,7 +103,7 @@ polynomial_element * generate_sieving_interval(mpz_t N){
     mpz_init(res);
     mpz_init_set_ui(T, 1);
     mpz_root(T, N, 2); // T = sqrt(N)
-    mpz_add_ui(T, T, 1); //Buffer T by one to ensure non negativity 
+    mpz_add_ui(T, T, 1); //Buffer T by one to ensure non negativity
 
     for (int i = 0; i < size; i++){
         //res = T^2 - N
@@ -93,7 +115,28 @@ polynomial_element * generate_sieving_interval(mpz_t N){
 
         mpz_add_ui(T, T, 1);
 
-    } 
+    }
 
     return SI;
+}
+
+relations * sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N){
+  mpz_t T, p, a, b;
+  mpz_init_set_ui(T, 1);
+  mpz_root(T, N, 2); // T = sqrt(N)
+  mpz_add_ui(T, T, 1); //Buffer T by one to ensure non negativity
+
+  for (int i = 1; i < prime_element.length(); i++){
+    mpz_init_set_ui(p, prime_element[i].p);
+    mpz_init_set_ui(a, prime_element[i].a);
+    mpz_init_set_ui(b, prime_element[i].b);
+    for (int j; j < polynomial_element.length(); j++){
+      mpz
+
+      mpz_mod (mpz_t r, , const mpz_t d)
+      if mpz_mod() || (j - b + T + 1 % p == 0) ){
+        polynomial_element[j] = polynomial_element[j]/p;
+    }
+  }
+
 }
