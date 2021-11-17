@@ -121,10 +121,12 @@ polynomial_element * generate_sieving_interval(mpz_t N){
 }
 
 void* sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N){
-  mpz_t T, p, a, b, diff, idx1, r1, min1, min2;
+  mpz_t T, p, a, b, idx, r, min1, min2;
   mpz_init_set_ui(T, 1);
   mpz_root(T, N, 2); // T = sqrt(N)
-  mpz_add_ui(T, T, 1); //Buffer T by one to ensure non negativity
+  mpz_add_ui(T, T, 1); //Buffer T by one to ensure non
+
+  power_storage * PS = new int[prime_element.length() + 1][polynomial_element] = {0};
 
   int counter = 0;
 
@@ -137,54 +139,68 @@ void* sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N){
 
     for (int j; j < polynomial_element.length(); j++){
       //for each prime, figure out the smallest polynomial expressed as (a+pk)^2 - N
-      mpz_set_ui(idx1, j);
-      mpz_add(idx1, idx1, T);
-      mpz_add_ui(idx1, idx1, 1);
-      mpz_sub(idx1, idx1, a);
-      mpz_mod(r1, idx1, p);
-      if (r1 == 0){
-        min1 = idx1;
+      mpz_set_ui(idx, j);
+      mpz_add(idx, idx, T);
+      mpz_add_ui(idx, idx, 1);
+      mpz_sub(idx, idx, a);
+      mpz_mod(r, idx, p);
+      if (r == 0){
+        min1 = idx;
       }
       break;
     }
 
+    //for each prime, figure ou the smallest polynomial expressed as (b+pk)^2 - N
     for (int j; j < polynomial_element.length(); j++){
-      mpz_set_ui(idx1, j);
-      mpz_add(idx1, idx1, T);
-      mpz_add_ui(idx1, idx1, 1);
-      mpz_sub(idx1, idx1, b);
-      mpz_mod(r1, idx1, p);
+      mpz_set_ui(idx, j);
+      mpz_add(idx, idx, T);
+      mpz_add_ui(idx, idx, 1);
+      mpz_sub(idx, idx, b);
+      mpz_mod(r, idx, p);
 
-      if (r1 == 0){
+      if (r == 0){
         min2 = idx1;
       }
       break;
     }
 
+    //prepare for for loop
     int step = unsigned long int mpz_get_ui (const mpz_t p);
     int init1 = unsigned long int mpz_get_ui (const mpz_t a);
     int init2 = unsigned long int mpz_get_ui (const mpz_t b);
 
+    //starting with smallest polynomial exprsesed as (a+pk)^2 - N, iterate through (a+ pk')^2 - N
     for (int j = init1; j < polynomial_element.length(); j = j + step){
       if (prime_element[i].p != 1){
-          prime_element[i].p = prime_element[i].p/p;
-          if (prime_element[i].p == 1){
-            counter += 1;
-          }
+        power = 0;
+        while (prime_element[i].p % step != 0){
+          prime_element[i].p = prime_element[i].p/step;
+          power += 1;
+        }
+
+        if (prime_element[i].p == 1){
+          counter += 1;
+        }
       }
     }
 
+    //starting with smallest polynomial exprsesed as (b+pk)^2 - N, iterate through (b+ pk')^2 - N
     for (int j = init2; j < polynomial_element.length(); j = j + step){
       if (prime_element[i].p != 1){
-          prime_element[i].p = prime_element[i].p/p;
-          if (prime_element[i].p == 1){
-            counter += 1;
-          }
+        power = 0;
+        while (prime_element[i].p % step == 0){
+          prime_element[i].p = prime_element[i].p/step;
+          power += 1;
+        }
+        if (prime_element[i].p == 1){
+          counter += 1;
+        }
       }
     }
 
+    //if there are enough relations, it is time to return
     if (counter >= prime_element.length() + 10){
-      break;
+      return;
     }
   }
 
