@@ -120,19 +120,23 @@ polynomial_element * generate_sieving_interval(mpz_t N){
     return SI;
 }
 
-relations * sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N){
+void* sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N){
   mpz_t T, p, a, b, diff, idx1, r1, min1, min2;
   mpz_init_set_ui(T, 1);
   mpz_root(T, N, 2); // T = sqrt(N)
   mpz_add_ui(T, T, 1); //Buffer T by one to ensure non negativity
 
+  int counter = 0;
+
   for (int i = 1; i < prime_element.length(); i++){
+    //convert p, a, b to primes
     mpz_init_set_ui(p, prime_element[i].p);
     mpz_init_set_ui(a, prime_element[i].a);
     mpz_init_set_ui(b, prime_element[i].b);
-    mpz_sub(diff, a, b);
+
 
     for (int j; j < polynomial_element.length(); j++){
+      //for each prime, figure out the smallest polynomial expressed as (a+pk)^2 - N
       mpz_set_ui(idx1, j);
       mpz_add(idx1, idx1, T);
       mpz_add_ui(idx1, idx1, 1);
@@ -157,8 +161,32 @@ relations * sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N){
       break;
     }
 
-    for (int j; j< polynomial_element.length(); j = j + p)
+    int step = unsigned long int mpz_get_ui (const mpz_t p);
+    int init1 = unsigned long int mpz_get_ui (const mpz_t a);
+    int init2 = unsigned long int mpz_get_ui (const mpz_t b);
 
+    for (int j = init1; j < polynomial_element.length(); j = j + step){
+      if (prime_element[i].p != 1){
+          prime_element[i].p = prime_element[i].p/p;
+          if (prime_element[i].p == 1){
+            counter += 1;
+          }
+      }
+    }
+
+    for (int j = init2; j < polynomial_element.length(); j = j + step){
+      if (prime_element[i].p != 1){
+          prime_element[i].p = prime_element[i].p/p;
+          if (prime_element[i].p == 1){
+            counter += 1;
+          }
+      }
+    }
+
+    if (counter >= prime_element.length() + 10){
+      break;
+    }
   }
+
 
 }
