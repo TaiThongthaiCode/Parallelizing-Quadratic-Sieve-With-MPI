@@ -34,10 +34,15 @@ int main(int argc, char *argv[]){
 
 
     int size = 80000;
-    for (int i = 0; i < 150; i++) {
-        cout << FB[i].p << endl;
-        cout << FB[i].a << endl;
-        cout << FB[i].b << endl;
+    // for (int i = 0; i < 150; i++) {
+    //     cout << FB[i].p << endl;
+    //     cout << FB[i].a << endl;
+    //     cout << FB[i].b << endl;
+    // }
+
+    int** relations = sieving_step(SI, FB, N);
+    for (int i = 0; i < sizeof(SI)-1; i++){
+        cout << relations[-1][i] << endl;
     }
 
     return 0;
@@ -120,89 +125,112 @@ polynomial_element * generate_sieving_interval(mpz_t N){
     return SI;
 }
 
-void* sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N){
+int** sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N){
   mpz_t T, p, a, b, idx, r, min1, min2;
+  int size_FB = sizeof(FB);
+  int size_SI = sizeof(SI);
+  int power;
+
+  mpz_init(idx);
+  mpz_init(r);
+  mpz_init(min1);
+  mpz_init(min2);
   mpz_init_set_ui(T, 1);
   mpz_root(T, N, 2); // T = sqrt(N)
   mpz_add_ui(T, T, 1); //Buffer T by one to ensure non
 
-  power_storage * PS = new int[prime_element.length() + 1][polynomial_element] = {0};
+  int** power_storage = new int*[size_FB + 1];
+  for (int i = 0; i < size_FB + 1; i++){
+    power_storage[i] = new int[size_SI];
+    for (int j = 0; j< size_SI; j++){
+      power_storage[i][j] = 0;
+    }
+  }
 
   int counter = 0;
 
-  for (int i = 1; i < prime_element.length(); i++){
+  for (int i = 1; i < size_FB; i++){
     //convert p, a, b to primes
-    mpz_init_set_ui(p, prime_element[i].p);
-    mpz_init_set_ui(a, prime_element[i].a);
-    mpz_init_set_ui(b, prime_element[i].b);
+    mpz_init_set_ui(p, FB[i].p);
+    mpz_init_set_ui(a, FB[i].a);
+    mpz_init_set_ui(b, FB[i].b);
 
 
-    for (int j; j < polynomial_element.length(); j++){
+    for (int j; j < size_SI; j++){
       //for each prime, figure out the smallest polynomial expressed as (a+pk)^2 - N
       mpz_set_ui(idx, j);
       mpz_add(idx, idx, T);
       mpz_add_ui(idx, idx, 1);
       mpz_sub(idx, idx, a);
       mpz_mod(r, idx, p);
-      if (r == 0){
-        min1 = idx;
+
+      if (mpz_cmp_ui(r, 0) == 0){
+        mpz_set(min1, idx);
+        break;
       }
-      break;
     }
 
     //for each prime, figure ou the smallest polynomial expressed as (b+pk)^2 - N
-    for (int j; j < polynomial_element.length(); j++){
+    for (int j; j < size_SI; j++){
       mpz_set_ui(idx, j);
       mpz_add(idx, idx, T);
       mpz_add_ui(idx, idx, 1);
       mpz_sub(idx, idx, b);
       mpz_mod(r, idx, p);
 
-      if (r == 0){
-        min2 = idx1;
+      if (mpz_cmp_ui(r, 0) == 0){
+        mpz_set(min2, idx);
+        break;
       }
-      break;
     }
 
     //prepare for for loop
-    int step = unsigned long int mpz_get_ui (const mpz_t p);
-    int init1 = unsigned long int mpz_get_ui (const mpz_t a);
-    int init2 = unsigned long int mpz_get_ui (const mpz_t b);
+    int step = mpz_get_ui (p);
+    int init1 =  mpz_get_ui (min1);
+    int init2 = mpz_get_ui (min2);
 
     //starting with smallest polynomial exprsesed as (a+pk)^2 - N, iterate through (a+ pk')^2 - N
-    for (int j = init1; j < polynomial_element.length(); j = j + step){
-      if (prime_element[i].p != 1){
+    mpz_t res;
+    mpz_init(res);
+
+    for (int j = init1; j < size_SI; j = j + step){
+      if (mpz_cmp_ui(SI[j].poly, 1) != 0){
         power = 0;
-        while (prime_element[i].p % step != 0){
-          prime_element[i].p = prime_element[i].p/step;
+        while (mpz_divisible_ui_p(SI[j].poly, step) == 0){
+          mpz_divexact_ui(SI[j].poly, SI[j].poly, step);
           power += 1;
         }
-
-        if (prime_element[i].p == 1){
+        power_storage[i][j] = power;
+        if (mpz_cmp_ui(SI[j].poly, 1) == 0){
           counter += 1;
+          power_storage[size_FB][j] = 1;
         }
       }
     }
 
     //starting with smallest polynomial exprsesed as (b+pk)^2 - N, iterate through (b+ pk')^2 - N
-    for (int j = init2; j < polynomial_element.length(); j = j + step){
-      if (prime_element[i].p != 1){
+    for (int j = init2; j < size_SI; j = j + step){
+      if (mpz_cmp_ui(SI[j].poly, 1) != 0){
         power = 0;
-        while (prime_element[i].p % step == 0){
-          prime_element[i].p = prime_element[i].p/step;
+        while (mpz_divisible_ui_p(SI[j].poly, step) == 0){
+          mpz_divexact_ui(SI[j].poly, SI[j].poly, step);
           power += 1;
         }
-        if (prime_element[i].p == 1){
+        power_storage[i][j] = power;
+        if (mpz_cmp_ui(SI[j].poly, 1) == 0){
           counter += 1;
+          power_storage[size_FB][j] = 1;
         }
       }
     }
 
+
     //if there are enough relations, it is time to return
-    if (counter >= prime_element.length() + 10){
-      return;
+    if (counter >= size_FB + 10){
+      return power_storage;
     }
   }
+  return power_storage;
 
 
 }
