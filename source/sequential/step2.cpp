@@ -144,10 +144,10 @@ int** sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, int fbs, 
   mpz_add_ui(T, T, 1); //Buffer T by one to ensure non
 
 
-  int** power_storage = new int*[size_FB + 1];
-  for (int i = 0; i < size_FB; i++){
-    power_storage[i] = new int[size_SI];
-    for (int j = 0; j< size_SI; j++){
+  int** power_storage = new int*[size_SI];
+  for (int i = 0; i < size_SI; i++){
+    power_storage[i] = new int[size_FB + 1];
+    for (int j = 0; j< size_FB + 1; j++){
       power_storage[i][j] = 0;
     }
   }
@@ -166,7 +166,9 @@ int** sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, int fbs, 
     mpz_init_set_ui(a, FB[i].a);
     mpz_init_set_ui(b, FB[i].b);
 
-    cout << p << "-"<< a << "-"<< b<< endl;
+    cout << p << endl;
+
+    // cout << p << "-"<< a << "-"<< b<< endl;
 
     for (int j = 0; j < size_SI; j++){
       //for each prime, figure out the smallest polynomial expressed as (a+pk)^2 - N
@@ -214,33 +216,59 @@ int** sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, int fbs, 
     int init1 =  mpz_get_ui (min1);
     int init2 = mpz_get_ui (min2);
 
-    cout << "step:" << p << "-" << "init1:" << init1 << "-" << "init2:" << init2 << endl;
+    // cout << "step:" << p << "-" << "init1:" << init1 << "-" << "init2:" << init2 << endl;
 
     //starting with smallest polynomial exprsesed as (a+pk)^2 - N, iterate through (a+ pk')^2 - N
     mpz_t res;
     mpz_init(res);
 
     for (int j = init1; j < 200; j = j + step){
-      cout << "idx:" << j << endl;
+      // cout << "idx:" << j << endl;
       int q = mpz_cmp_ui(SI[j].poly, 1);
       if (q != 0){
         power = 0;
         q = mpz_divisible_ui_p(SI[j].poly, step);
-        cout << "Sieving Polynomial" << SI[j].poly << "step: " << step << endl;
+        // cout << "Sieving Polynomial" << SI[j].poly << "step: " << step << endl;
         while (q != 0){
           mpz_divexact_ui(SI[j].poly, SI[j].poly, step);
           power += 1;
           q = mpz_divisible_ui_p(SI[j].poly, step);
         }
-        cout << power << endl;
+        // cout << power << endl;
         power_storage[i][j] = power;
         q = mpz_cmp_ui(SI[j].poly, 1);
         if (q == 0){
           counter += 1;
-          //power_storage[size_FB][j] = 1;
+          power_storage[size_FB][j] = 1;
+          cout << "We are here!" << endl;
         }
       }
     }
+
+    for (int j = init2; j < 200; j = j + step){
+      // cout << "idx:" << j << endl;
+      int q = mpz_cmp_ui(SI[j].poly, 1);
+      if (q != 0){
+        power = 0;
+        q = mpz_divisible_ui_p(SI[j].poly, step);
+        // cout << "Sieving Polynomial" << SI[j].poly << "step: " << step << endl;
+        while (q != 0){
+          mpz_divexact_ui(SI[j].poly, SI[j].poly, step);
+          power += 1;
+          q = mpz_divisible_ui_p(SI[j].poly, step);
+        }
+        // cout << power << endl;
+        power_storage[i][j] = power;
+        q = mpz_cmp_ui(SI[j].poly, 1);
+        if (q == 0){
+          counter += 1;
+          power_storage[size_FB][j] = 1;
+          cout << "We ae here!" << endl;
+        }
+      }
+    }
+
+    // cout << counter << endl;
 
     // for (int j = init1; j < size_SI; j = j + step){
     //   int q = mpz_cmp_ui(SI[j].poly, 1);
