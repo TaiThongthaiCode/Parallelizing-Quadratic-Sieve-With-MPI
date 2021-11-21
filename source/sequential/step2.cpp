@@ -58,10 +58,21 @@ int main(int argc, char *argv[]){
     // }
 
     //test
+
+
+
+
     int** relations = sieving_step(SI, FB, N, fbs, pes);
     for (int i = 0; i < pes; i++){
-        if (relations[i][fbs] == 1){
-          cout << relations[i][fbs] << endl;
+        if (relations[fbs][i] == 1){
+          for (int j = 0; j <= fbs; j++){
+            cout << "prime:" << FB[j].p << ", power:" << relations[j][i] << endl;
+            // if (relations[i][j] != 0){
+            //   cout << "p:" << FB[i].p << "power: " << relations[i][j] << endl;
+            // }
+          }
+          break;
+          //cout << relations[i][fbs] << endl;
         }
     }
 
@@ -153,10 +164,10 @@ int** sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, int fbs, 
   mpz_add_ui(T, T, 1); //Buffer T by one to ensure non
 
   //initialize matrix which stores max power of a prime which divides any given polynomial evaluation
-  int** power_storage = new int*[size_SI];
-  for (int i = 0; i < size_SI; i++){
-    power_storage[i] = new int[size_FB + 1];
-    for (int j = 0; j< size_FB + 1; j++){
+  int** power_storage = new int*[size_FB+1];
+  for (int i = 0; i < size_FB+1; i++){
+    power_storage[i] = new int[size_SI];
+    for (int j = 0; j< size_SI; j++){
       power_storage[i][j] = 0;
     }
   }
