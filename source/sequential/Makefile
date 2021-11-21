@@ -8,9 +8,10 @@ UNITTEST_LIB = -lUnitTest++
 
 MAINPROG = step1
 SIEVEPROG = step2
+GAUSSPROG = step3
 
 
-all: $(MAINPROG) $(SIEVEPROG)
+all: $(MAINPROG) $(SIEVEPROG) $(GAUSSPROG)
 
 # This target builds your main program.
 $(MAINPROG): $(MAINPROG).o
@@ -22,6 +23,13 @@ $(MAINPROG): $(MAINPROG).o
 # This target builds your main program.
 $(SIEVEPROG): $(SIEVEPROG).o
 	$(CXX) $(CXXFLAGS) -o $@ $(SIEVEPROG).o -lgmpxx -lgmp
+# This target describes how to compile a .o file from a .cpp file.
+%.o: %.cpp $(HFILES)
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
+
+# This target builds your main program.
+$(GAUSSPROG): $(GAUSSPROG).o
+	$(CXX) $(CXXFLAGS) -o $@ $(GAUSSPROG).o -lgmpxx -lgmp
 # This target describes how to compile a .o file from a .cpp file.
 %.o: %.cpp $(HFILES)
 	$(CXX) $(CXXFLAGS) -c -o $@ $<

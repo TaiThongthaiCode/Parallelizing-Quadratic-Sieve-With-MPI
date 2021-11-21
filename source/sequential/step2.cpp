@@ -77,11 +77,11 @@ int main(int argc, char *argv[]){
     // }
 
     ofstream fb;
-    fb.open ("Power_Matrix.txt");
+    fb.open ("Expo_Matrix.txt");
     for (int i = 0; i < pes; i++){
         if (relations[fbs][i] == 1){
           for (int j = 0; j < fbs; j++){
-            fb << relations[j][i];
+            fb << relations[j][i] % 2;
 
             // cout << "prime:" << FB[j].p << ", power:" << relations[j][i] << endl;
             // if (relations[i][j] != 0){
