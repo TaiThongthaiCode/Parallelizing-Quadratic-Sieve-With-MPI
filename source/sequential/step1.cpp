@@ -22,17 +22,16 @@ using namespace std;
 
 int main(int argc, char *argv[]){
 
-    //setting N
+    //Setting some value of N = pq for prime p and prime q.
     mpz_t N;
     mpz_init(N);
     mpz_set_str(N, "69", 10);
 
-
-
+    //calculate number of digits
     size_t j = mpz_sizeinbase (N, 10);
-
     int size = static_cast<int>(j);
 
+    //Size of Factorbase to be allocated depending on the number of digits
     int fbs, l;
     if (size < 25) {
       fbs = 150;
@@ -40,46 +39,57 @@ int main(int argc, char *argv[]){
       fbs = 1560;
     } else if (size < 75) {
       fbs = 6000;
-    } else if (size < 100) {
+    } else {
       fbs = 60000;
     }
+
+    //approximation for upper bound on the fbs-th largest prime and allocation of array to store factor base
     l = 2*fbs*log(2*fbs);
-
     prime_element * primes = (prime_element *)calloc(fbs, sizeof(prime_element));
-    getprimes(l, N, primes);
+
+    //gets all primes less than l = 2*fbs*log(2*fbs) and the amount
+    fbs = getprimes(l, N, primes, fbs);
 
 
-    //writing a factorbase file
+
+    //Write primes and solutions a, b suh that a^2 = b^2 = N (mod p) into a text file; also write in nuber of primes
     ofstream fb;
     fb.open ("factorbase.txt");
-
     for (int i = 0; i < fbs; i++){
       fb << primes[i].p <<" " << primes[i].a << " " << primes[i].b << endl;
     }
-
     fb.close();
 
+
+    fb.open ("fb_size.txt");
+    fb << fbs << endl;
+    fb.close();
 
     return 0;
 }
 
 
 /*
-Sieve of erasthones
+Function which performs the sieve of erathosenes on the interval provided by [0, l]
 */
-void getprimes(int l, mpz_t N, prime_element * primes){
+int getprimes(int l, mpz_t N, prime_element * primes, int fbs){
 
+    //initialize index and mpz ttype to store prime in question
     int idx = 0;
-
     mpz_t pp;
     mpz_init(pp);
 
+    //An array of booleans indicating if the val is prime or not
+    //initialize as True
     bool *truth = new bool[l+1];
     for (int i = 0; i < l+1; i++){
         truth[i] = true;
     }
+    //make 0 and 1 index false
     truth[0] = false;
     truth[1] = false;
+
+    //check all i less than sqrt(l), when something is prime, make all multiples not prime (starting from squared, as others are arleady covered)
     for (int i = 0; i*i < l; i++){
         if (truth[i]){
             for (int j=i*i; j<=l; j=j+i){
@@ -87,24 +97,28 @@ void getprimes(int l, mpz_t N, prime_element * primes){
             }
         }
     }
+
+    //Check if N is QR mod p with legendre
     for (int i = 1; i<l+1; i++){
         if (truth[i]){
             mpz_set_ui(pp, i);
 
-            //if qr then shank tonelli 
-            if (mpz_legendre(N, pp) != -1){
+            //if qr then shank tonelli until fbs size isn't exceeded
+            if (mpz_legendre(N, pp) != -1 && idx < fbs){
               primes[idx].p = i;
               shanktonellis(N, &primes[idx]);
               idx++;
             }
         }
     }
+    return idx + 1;
 }
 
 
+//Shank-Tonellis algorithm, taken verbatim from the Bytopia MPQS implementation, we did not commment it because we are confused... but we will get to it
 void shanktonellis(mpz_t N, prime_element *prime){
 
- int res_int; 
+ int res_int;
  mpz_t b, q, res;
  mpz_init(b);
  mpz_init(q);
@@ -113,15 +127,13 @@ void shanktonellis(mpz_t N, prime_element *prime){
  mpz_set_ui(q, prime->p);
  mpz_sqrtm(res, b, q);
 
-
  res_int = mpz_get_ui(res);
  prime->a = res_int;
  prime->b = prime->p - prime->a;
 
  return;
-  
-}
 
+}
 
 int mpz_sqrtm(mpz_ptr rop, mpz_t a, mpz_t q)
 {
@@ -185,4 +197,3 @@ int mpz_sqrtm(mpz_ptr rop, mpz_t a, mpz_t q)
   mpz_clear(g); mpz_clear(temp); mpz_clear(t); mpz_clear(gInv); mpz_clear(qDiv); mpz_clear(h); mpz_clear(b);
   return 1;
 }
-

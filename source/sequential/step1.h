@@ -20,7 +20,7 @@ struct prime_element {
     int p, a, b;
 };
 
-void getprimes(int l, mpz_t N, prime_element * primes);
+int getprimes(int l, mpz_t N, prime_element * primes, int fbs);
 void shanktonellis(mpz_t N, prime_element *prime);
 //int convertx2e(int x, int& e);
 // int powmod(int base, int exponent, int mod);
@@ -28,5 +28,3 @@ void shanktonellis(mpz_t N, prime_element *prime);
 int mpz_sqrtm(mpz_ptr rop, mpz_t a, mpz_t q);
 
 vector<mpz_t> removeNotQR(vector<mpz_t> primes, mpz_t n);
-
-

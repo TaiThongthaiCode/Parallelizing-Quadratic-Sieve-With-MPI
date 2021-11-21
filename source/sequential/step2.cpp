@@ -35,14 +35,14 @@ int main(int argc, char *argv[]){
     size_t j = mpz_sizeinbase (N, 10);
     int size = static_cast<int>(j);
     int fbs;
-    if (size < 25) {
-      fbs = 150;
-    } else if (size < 50) {
-      fbs = 1560;
-    } else if (size < 75) {
-      fbs = 6000;
-    } else if (size < 100) {
-      fbs = 60000;
+
+    string line;
+    ifstream myfile ("fb_size.txt");
+    if (myfile.is_open()){
+      getline(myfile, line);
+      char str_array[line.length()];
+      strcpy(str_array, line.c_str());
+      fbs = atoi(str_array);
     }
 
     prime_element * FB = load(N, fbs);
