@@ -1,0 +1,1 @@
+We don't have any command line arguments right now. One can manually change the value of N in step1 and step2. As of now we have the matrix which needs to be solved using a sparse system solver over GF(2) stored in the Power_Matrix.txt file.
