@@ -26,16 +26,16 @@ Tai Thongthai and Tarang Saluja
 
 int main(int argc, char *argv[]){
 
+    //Set value of N
     mpz_t N;
-    mpz_init_set_ui(N, 69);
+    mpz_init_set_ui(N, 87);
 
+    //current size of sieving interval
     int pes = 80000;
     polynomial_element * SI = generate_sieving_interval(N);
 
-    size_t j = mpz_sizeinbase (N, 10);
-    int size = static_cast<int>(j);
+    //grab size of factor base from file
     int fbs;
-
     string line;
     ifstream myfile ("fb_size.txt");
     if (myfile.is_open()){
@@ -45,17 +45,19 @@ int main(int argc, char *argv[]){
       fbs = atoi(str_array);
     }
 
+    //fill in factor base
     prime_element * FB = load(N, fbs);
 
 
-    // for (int i = 0; i < 150; i++) {
-    //     cout << FB[i].p << "-"<< FB[i].a << "-"<< FB[i].b << endl;
-    // }
+    for (int i = 0; i < fbs; i++) {
+        cout << FB[i].p << "-"<< FB[i].a << "-"<< FB[i].b << endl;
+    }
 
     // for (int i = 0; i < 80000; i++){
     //   cout << i << ":" << SI[i].poly << endl;
     // }
 
+    //test
     int** relations = sieving_step(SI, FB, N, fbs, pes);
     for (int i = 0; i < pes; i++){
         if (relations[i][fbs] == 1){
@@ -66,8 +68,8 @@ int main(int argc, char *argv[]){
     return 0;
 }
 
+//load in the factor base elements and the corresponding values of a and b
 prime_element * load(mpz_t N, int fbs){
-
 
     prime_element * FB = (prime_element *)calloc(fbs, sizeof(prime_element));
 
@@ -75,9 +77,11 @@ prime_element * load(mpz_t N, int fbs){
     ifstream myfile ("factorbase.txt");
     if (myfile.is_open()){
         int idx = 0;
+        //go through each line and get the required data
         while ( getline (myfile,line) ){
           char str_array[line.length()];
           strcpy(str_array, line.c_str());
+          //Use strtok to get one nuber at a time
           char* number = strtok(str_array, " ");
           int item = 0;
           while (number != NULL){
@@ -93,6 +97,7 @@ prime_element * load(mpz_t N, int fbs){
             }
             number = strtok(NULL, " ");
         }
+          //iterate index, so that it is stored in the correct place
           idx++;
         }
         myfile.close();
@@ -101,14 +106,15 @@ prime_element * load(mpz_t N, int fbs){
     else cout << "Unable to open file";
 
     return FB;
-
 }
 
+//create the sieving iterval of size 80, 000
 polynomial_element * generate_sieving_interval(mpz_t N){
 
     int size = 80000;
     polynomial_element * SI = new polynomial_element[size];
 
+    //Find smallest value of T such that T^2 - N >= 0
     mpz_t T, Tsq, res;
     mpz_init(Tsq);
     mpz_init(res);
@@ -116,6 +122,7 @@ polynomial_element * generate_sieving_interval(mpz_t N){
     mpz_root(T, N, 2); // T = sqrt(N)
     mpz_add_ui(T, T, 1); //Buffer T by one to ensure non negativity
 
+    //Evaluate for 80,000 values and add to array.
     for (int i = 0; i < size; i++){
         //res = T^2 - N
         mpz_pow_ui(Tsq, T, 2);
@@ -125,13 +132,13 @@ polynomial_element * generate_sieving_interval(mpz_t N){
         mpz_set(SI[i].poly, res);
 
         mpz_add_ui(T, T, 1);
-
     }
-
     return SI;
 }
 
 int** sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, int fbs, int pes){
+
+  //intialize values and recompute value for T
   mpz_t T, p, a, b, idx, r, min1, min2;
   int size_FB = fbs;
   int size_SI = pes;
@@ -145,7 +152,7 @@ int** sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, int fbs, 
   mpz_root(T, N, 2); // T = sqrt(N)
   mpz_add_ui(T, T, 1); //Buffer T by one to ensure non
 
-
+  //initialize matrix which stores max power of a prime which divides any given polynomial evaluation
   int** power_storage = new int*[size_SI];
   for (int i = 0; i < size_SI; i++){
     power_storage[i] = new int[size_FB + 1];
@@ -154,16 +161,11 @@ int** sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, int fbs, 
     }
   }
 
-
+  // counting number of relations
   int counter = 0;
 
   for (int i = 0; i < size_FB; i++){
-    //convert p, a, b to primes
-
-    if (FB[i].p == 0){
-      break;
-    }
-
+    //convert p, a, b to mpz types
     mpz_init_set_ui(p, FB[i].p);
     mpz_init_set_ui(a, FB[i].a);
     mpz_init_set_ui(b, FB[i].b);
@@ -180,10 +182,10 @@ int** sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, int fbs, 
       //int test = mpz_cmp_ui(p, 0);
 
       //cout << "idx:" << idx << endl;
+      //check if i congruent to a - T mod p
       mpz_mod(r, idx, p);
 
       int q = mpz_cmp_ui(r, 0);
-
       if (q == 0){
         mpz_set_ui(min1, j);
         // cout <<  << endl;
@@ -204,6 +206,7 @@ int** sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, int fbs, 
       //cout << "idx:" << idx << endl;
       mpz_mod(r, idx, p);
 
+      //check if i congruent to b-T mod p
       int q = mpz_cmp_ui(r, 0);
 
       if (q == 0){
@@ -227,6 +230,7 @@ int** sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, int fbs, 
     for (int j = init1; j < size_SI; j = j + step){
       // cout << "idx:" << j << endl;
       int q = mpz_cmp_ui(SI[j].poly, 1);
+      //If it is not yet 1, divide by p util applicable
       if (q != 0){
         power = 0;
         q = mpz_divisible_ui_p(SI[j].poly, step);
@@ -237,8 +241,9 @@ int** sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, int fbs, 
           q = mpz_divisible_ui_p(SI[j].poly, step);
         }
         // cout << power << endl;
-        power_storage[i][j] = power;
+        power_storage[i][j] = power; //make this the desired power
         q = mpz_cmp_ui(SI[j].poly, 1);
+        //If at 1 after step, add to counter and note that it is done in the power_storage array
         if (q == 0){
           counter += 1;
           power_storage[size_FB][j] = 1;
@@ -247,6 +252,7 @@ int** sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, int fbs, 
       }
     }
 
+    //identical to above
     for (int j = init2; j < size_SI; j = j + step){
       // cout << "idx:" << j << endl;
       int q = mpz_cmp_ui(SI[j].poly, 1);

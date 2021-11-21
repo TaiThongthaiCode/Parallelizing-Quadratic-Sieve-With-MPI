@@ -88,7 +88,6 @@ int getprimes(int l, mpz_t N, prime_element * primes, int fbs){
     //make 0 and 1 index false
     truth[0] = false;
     truth[1] = false;
-
     //check all i less than sqrt(l), when something is prime, make all multiples not prime (starting from squared, as others are arleady covered)
     for (int i = 0; i*i < l; i++){
         if (truth[i]){
@@ -99,9 +98,17 @@ int getprimes(int l, mpz_t N, prime_element * primes, int fbs){
     }
 
     //Check if N is QR mod p with legendre
-    for (int i = 1; i<l+1; i++){
+    for (int i = 0; i<l+1; i++){
         if (truth[i]){
             mpz_set_ui(pp, i);
+
+            //do it for 2
+            if (i == 2){
+              primes[idx].p = i;
+              primes[idx].a = 1;
+              primes[idx].b = 1;
+              idx++;
+            }
 
             //if qr then shank tonelli until fbs size isn't exceeded
             if (mpz_legendre(N, pp) != -1 && idx < fbs){
@@ -111,7 +118,7 @@ int getprimes(int l, mpz_t N, prime_element * primes, int fbs){
             }
         }
     }
-    return idx + 1;
+    return idx;
 }
 
 
