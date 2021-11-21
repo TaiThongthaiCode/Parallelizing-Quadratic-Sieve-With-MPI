@@ -25,7 +25,7 @@ int main(int argc, char *argv[]){
     //Setting some value of N = pq for prime p and prime q.
     mpz_t N;
     mpz_init(N);
-    mpz_set_str(N, "69", 10);
+    mpz_set_str(N, "10062757", 10);
 
     //calculate number of digits
     size_t j = mpz_sizeinbase (N, 10);
@@ -97,6 +97,7 @@ int getprimes(int l, mpz_t N, prime_element * primes, int fbs){
         }
     }
 
+
     //Check if N is QR mod p with legendre
     for (int i = 0; i<l+1; i++){
         if (truth[i]){
@@ -109,6 +110,8 @@ int getprimes(int l, mpz_t N, prime_element * primes, int fbs){
               primes[idx].b = 1;
               idx++;
             }
+
+
 
             //if qr then shank tonelli until fbs size isn't exceeded
             if (mpz_legendre(N, pp) != -1 && idx < fbs){

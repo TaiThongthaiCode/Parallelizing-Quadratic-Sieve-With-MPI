@@ -28,7 +28,7 @@ int main(int argc, char *argv[]){
 
     //Set value of N
     mpz_t N;
-    mpz_init_set_ui(N, 87);
+    mpz_init_set_ui(N, 10062757);
 
     //current size of sieving interval
     int pes = 80000;
