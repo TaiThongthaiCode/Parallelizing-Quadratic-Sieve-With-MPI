@@ -61,17 +61,34 @@ int main(int argc, char *argv[]){
 
 
 
-
+    //Write complete columns as rows into a text file
     int** relations = sieving_step(SI, FB, N, fbs, pes);
+
+    // for (int i = 0; i < pes; i++){
+    //     if (relations[fbs][i] == 1){
+    //       for (int j = 0; j < fbs; j++){
+    //
+    //         cout << "prime:" << FB[j].p << ", power:" << relations[j][i] << endl;
+    //
+    //       }
+    //       break;
+    //       //cout << relations[i][fbs] << endl;
+    //     }
+    // }
+
+    ofstream fb;
+    fb.open ("Power_Matrix.txt");
     for (int i = 0; i < pes; i++){
         if (relations[fbs][i] == 1){
-          for (int j = 0; j <= fbs; j++){
-            cout << "prime:" << FB[j].p << ", power:" << relations[j][i] << endl;
+          for (int j = 0; j < fbs; j++){
+            fb << relations[j][i];
+
+            // cout << "prime:" << FB[j].p << ", power:" << relations[j][i] << endl;
             // if (relations[i][j] != 0){
             //   cout << "p:" << FB[i].p << "power: " << relations[i][j] << endl;
             // }
           }
-          break;
+          fb << endl;
           //cout << relations[i][fbs] << endl;
         }
     }
