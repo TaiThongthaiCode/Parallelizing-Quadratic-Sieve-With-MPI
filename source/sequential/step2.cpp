@@ -57,9 +57,11 @@ int main(int argc, char *argv[]){
     // }
 
     int** relations = sieving_step(SI, FB, N, fbs, pes);
-    // for (int i = 0; i < sizeof(SI); i++){
-    //     cout << relations[sizeof(relations)-1][i] << endl;
-    // }
+    for (int i = 0; i < pes; i++){
+        if (relations[i][fbs] == 1){
+          cout << relations[i][fbs] << endl;
+        }
+    }
 
     return 0;
 }
@@ -155,7 +157,7 @@ int** sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, int fbs, 
 
   int counter = 0;
 
-  for (int i = 0; i < 10; i++){
+  for (int i = 0; i < size_FB; i++){
     //convert p, a, b to primes
 
     if (FB[i].p == 0){
@@ -166,7 +168,7 @@ int** sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, int fbs, 
     mpz_init_set_ui(a, FB[i].a);
     mpz_init_set_ui(b, FB[i].b);
 
-    cout << p << endl;
+    cout << i << endl;
 
     // cout << p << "-"<< a << "-"<< b<< endl;
 
@@ -222,7 +224,7 @@ int** sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, int fbs, 
     mpz_t res;
     mpz_init(res);
 
-    for (int j = init1; j < 200; j = j + step){
+    for (int j = init1; j < size_SI; j = j + step){
       // cout << "idx:" << j << endl;
       int q = mpz_cmp_ui(SI[j].poly, 1);
       if (q != 0){
@@ -240,12 +242,12 @@ int** sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, int fbs, 
         if (q == 0){
           counter += 1;
           power_storage[size_FB][j] = 1;
-          cout << "We are here!" << endl;
+          // cout << "We are here!" << endl;
         }
       }
     }
 
-    for (int j = init2; j < 200; j = j + step){
+    for (int j = init2; j < size_SI; j = j + step){
       // cout << "idx:" << j << endl;
       int q = mpz_cmp_ui(SI[j].poly, 1);
       if (q != 0){
@@ -263,52 +265,18 @@ int** sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, int fbs, 
         if (q == 0){
           counter += 1;
           power_storage[size_FB][j] = 1;
-          cout << "We ae here!" << endl;
+          // cout << "We are here!" << endl;
         }
       }
     }
 
-    // cout << counter << endl;
-
-    // for (int j = init1; j < size_SI; j = j + step){
-    //   int q = mpz_cmp_ui(SI[j].poly, 1);
-    //   if (q != 0){
-    //     power = 0;
-    //     q = mpz_divisible_ui_p(SI[j].poly, step);
-    //     while (q == 0){
-    //       mpz_divexact_ui(SI[j].poly, SI[j].poly, step);
-    //       power += 1;
-    //       cout << "We are here!" << endl;
-    //     }
-    //     power_storage[i][j] = power;
-    //     if (mpz_cmp_ui(SI[j].poly, 1) == 0){
-    //       counter += 1;
-    //       power_storage[size_FB][j] = 1;
-    //     }
-    //   }
-    // }
-
-    // //starting with smallest polynomial exprsesed as (b+pk)^2 - N, iterate through (b+ pk')^2 - N
-    // for (int j = init2; j < size_SI; j = j + step){
-    //   if (mpz_cmp_ui(SI[j].poly, 1) != 0){
-    //     power = 0;
-    //     while (mpz_divisible_ui_p(SI[j].poly, step) == 0){
-    //       mpz_divexact_ui(SI[j].poly, SI[j].poly, step);
-    //       power += 1;
-    //     }
-    //     power_storage[i][j] = power;
-    //     if (mpz_cmp_ui(SI[j].poly, 1) == 0){
-    //       counter += 1;
-    //       power_storage[size_FB][j] = 1;
-    //     }
-    //   }
-    // }
+    cout << "count:" << counter << endl;
 
 
     // //if there are enough relations, it is time to return
-    // if (counter >= size_FB + 10){
-    //   return power_storage;
-    // }
+    if (counter >= size_FB + 10){
+      return power_storage;
+    }
   }
   return power_storage;
 
