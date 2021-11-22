@@ -22,6 +22,15 @@ Tai Thongthai and Tarang Saluja
 
 #include "step3.h"
 
+
+int main(int argc, char* arv[]){
+
+
+
+  return 0;
+}
+
+
 //TODO
 
 //(1)  Insert the matrix row by row from the output of step2.cpp
