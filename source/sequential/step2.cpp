@@ -34,6 +34,8 @@ int main(int argc, char *argv[]){
     int pes = 80000;
     polynomial_element * SI = generate_sieving_interval(N);
 
+    int relation_count = 0;
+
     //grab size of factor base from file
     int fbs;
     string line;
@@ -59,8 +61,6 @@ int main(int argc, char *argv[]){
 
     //test
 
-
-
     //Write complete columns as rows into a text file
     int** relations = sieving_step(SI, FB, N, fbs, pes);
 
@@ -75,6 +75,44 @@ int main(int argc, char *argv[]){
     //       //cout << relations[i][fbs] << endl;
     //     }
     // }
+
+    for (int i = 0; i < pes; i++){
+      if (relations[fbs][i] == 1){
+        relation_count += 1;
+      }
+    }
+    cout << relation_count << endl;
+
+    //initialize exponent matrix
+    int** power_matrix = new int*[relation_count+1];
+    for (int i = 0; i < relation_count+1; i++){
+      power_matrix[i] = new int[fbs];
+      for (int j = 0; j< fbs; j++){
+        power_matrix[i][j] = 0;
+      }
+    }
+
+    //Fill out the exponential matrix
+    int sieve_number = 0;
+    for (int i = 0; i < pes; i++){
+      if (relations[fbs][i] == 1){
+        for (int j = 0; j < fbs; j++){
+          power_matrix[sieve_number][j] = relations[j][i];
+        }
+      }
+    }
+
+    //get bit matrix
+    int** bit_matrix = new int*[relation_count+1];
+    for (int i = 0; i < relation_count+1; i++){
+      bit_matrix[i] = new int[fbs];
+      for (int j = 0; j< fbs; j++){
+        bit_matrix[i][j] = power_matrix[i][j] %2;
+      }
+    }
+
+
+
 
     ofstream fb;
     fb.open ("Expo_Matrix.txt");
@@ -92,6 +130,26 @@ int main(int argc, char *argv[]){
           //cout << relations[i][fbs] << endl;
         }
     }
+    fb.close();
+
+    fb.open ("Power_Matrix.txt");
+    for (int i = 0; i < pes; i++){
+        if (relations[fbs][i] == 1){
+          for (int j = 0; j < fbs; j++){
+            fb << relations[j][i];
+
+            // cout << "prime:" << FB[j].p << ", power:" << relations[j][i] << endl;
+            // if (relations[i][j] != 0){
+            //   cout << "p:" << FB[i].p << "power: " << relations[i][j] << endl;
+            // }
+          }
+          fb << endl;
+          //cout << relations[i][fbs] << endl;
+        }
+    }
+    fb.close();
+
+
 
     return 0;
 }

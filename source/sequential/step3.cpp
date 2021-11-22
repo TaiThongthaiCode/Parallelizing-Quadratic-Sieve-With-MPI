@@ -19,11 +19,28 @@ Tai Thongthai and Tarang Saluja
 #include <obstack.h>
 
 
-
 #include "step3.h"
 
 
 int main(int argc, char* arv[]){
+
+  //Set value of N
+  mpz_t N;
+  mpz_init_set_ui(N, 10062757);
+
+  //grab size of factor base from file
+  int fbs;
+  string line;
+  ifstream myfile ("fb_size.txt");
+  if (myfile.is_open()){
+    getline(myfile, line);
+    char str_array[line.length()];
+    strcpy(str_array, line.c_str());
+    fbs = atoi(str_array);
+  }
+
+  //fill in factor base
+  //prime_element * FB = load(N, fbs);
 
 
 
