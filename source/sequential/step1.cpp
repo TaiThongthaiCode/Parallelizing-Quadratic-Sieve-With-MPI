@@ -96,8 +96,6 @@ int getprimes(int l, mpz_t N, prime_element * primes, int fbs){
             }
         }
     }
-
-
     //Check if N is QR mod p with legendre
     for (int i = 0; i<l+1; i++){
         if (truth[i]){
@@ -110,9 +108,6 @@ int getprimes(int l, mpz_t N, prime_element * primes, int fbs){
               primes[idx].b = 1;
               idx++;
             }
-
-
-
             //if qr then shank tonelli until fbs size isn't exceeded
             if (mpz_legendre(N, pp) != -1 && idx < fbs){
               primes[idx].p = i;

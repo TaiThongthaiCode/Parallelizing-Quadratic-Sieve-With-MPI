@@ -33,6 +33,7 @@ int main(int argc, char *argv[]){
     //current size of sieving interval
     int pes = 80000;
     polynomial_element * SI = generate_sieving_interval(N);
+    polynomial_element * SISAVE = generate_sieving_interval(N);
 
     int relation_count = 0;
 
@@ -83,10 +84,13 @@ int main(int argc, char *argv[]){
     }
     cout << relation_count << endl;
 
+    polynomial_element * SISUB = new polynomial_element[relation_count];
+
     //initialize exponent matrix
-    int** power_matrix = new int*[relation_count+1];
-    for (int i = 0; i < relation_count+1; i++){
-      power_matrix[i] = new int[fbs];
+    int count = 0;
+    int** power_matrix = new int*[relation_count];
+    for (int i = 0; i < relation_count; i++){
+      power_matrix[i] = new int[fbs+1];
       for (int j = 0; j< fbs; j++){
         power_matrix[i][j] = 0;
       }
@@ -99,12 +103,14 @@ int main(int argc, char *argv[]){
         for (int j = 0; j < fbs; j++){
           power_matrix[sieve_number][j] = relations[j][i];
         }
+        mpz_set(SISUB[count].poly, SISAVE[i].poly);
+        count += 1;
       }
     }
 
     //get bit matrix
-    int** bit_matrix = new int*[relation_count+1];
-    for (int i = 0; i < relation_count+1; i++){
+    int** bit_matrix = new int*[relation_count];
+    for (int i = 0; i < relation_count; i++){
       bit_matrix[i] = new int[fbs];
       for (int j = 0; j< fbs; j++){
         bit_matrix[i][j] = power_matrix[i][j] %2;
