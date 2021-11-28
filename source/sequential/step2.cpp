@@ -17,12 +17,12 @@ Tai Thongthai and Tarang Saluja
 #include <gmp.h>
 #include <stdarg.h>
 #include <obstack.h>
-
-
+ 
+#include </usr/include/eigen3/Eigen/Dense>
 
 #include "step2.h"
 
-
+using namespace Eigen;
 
 int main(int argc, char *argv[]){
 
@@ -56,26 +56,11 @@ int main(int argc, char *argv[]){
         cout << FB[i].p << "-"<< FB[i].a << "-"<< FB[i].b << endl;
     }
 
-    // for (int i = 0; i < 80000; i++){
-    //   cout << i << ":" << SI[i].poly << endl;
-    // }
-
-    //test
 
     //Write complete columns as rows into a text file
     int** relations = sieving_step(SI, FB, N, fbs, pes);
 
-    // for (int i = 0; i < pes; i++){
-    //     if (relations[fbs][i] == 1){
-    //       for (int j = 0; j < fbs; j++){
-    //
-    //         cout << "prime:" << FB[j].p << ", power:" << relations[j][i] << endl;
-    //
-    //       }
-    //       break;
-    //       //cout << relations[i][fbs] << endl;
-    //     }
-    // }
+  
 
     for (int i = 0; i < pes; i++){
       if (relations[fbs][i] == 1){
@@ -155,7 +140,7 @@ int main(int argc, char *argv[]){
     }
     fb.close();
 
-
+    solve_matrix();
 
     return 0;
 }
@@ -265,87 +250,38 @@ int** sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, int fbs, 
     cout << i << endl;
 
     // cout << p << "-"<< a << "-"<< b<< endl;
+    int init1 = prime_find_min(size_SI, a, p, min1, T, r, idx);
+    int init2 = prime_find_min(size_SI, b, p, min2, T, r, idx);
 
-    for (int j = 0; j < size_SI; j++){
-      //for each prime, figure out the smallest polynomial expressed as (a+pk)^2 - N
-      mpz_set_ui(idx, j);
-      mpz_add(idx, idx, T);
-      mpz_sub(idx, idx, a);
-      //int test = mpz_cmp_ui(p, 0);
-
-      //cout << "idx:" << idx << endl;
-      //check if i congruent to a - T mod p
-      mpz_mod(r, idx, p);
-
-      int q = mpz_cmp_ui(r, 0);
-      if (q == 0){
-        mpz_set_ui(min1, j);
-        // cout <<  << endl;
-        //cout << min1 << endl;
-        break;
-      }
-    }
-
-
-    //for each prime, figure ou the smallest polynomial expressed as (b+pk)^2 - N
-    for (int j = 0; j < size_SI; j++){
-      //for each prime, figure out the smallest polynomial expressed as (a+pk)^2 - N
-      mpz_set_ui(idx, j);
-      mpz_add(idx, idx, T);
-      mpz_sub(idx, idx, b);
-      //int test = mpz_cmp_ui(p, 0);
-
-      //cout << "idx:" << idx << endl;
-      mpz_mod(r, idx, p);
-
-      //check if i congruent to b-T mod p
-      int q = mpz_cmp_ui(r, 0);
-
-      if (q == 0){
-        mpz_set_ui(min2, j);
-        // cout <<  << endl;
-        //cout << min2 << endl;
-        break;
-      }
-    }
     //prepare for for loop
     int step = mpz_get_ui (p);
-    int init1 =  mpz_get_ui (min1);
-    int init2 = mpz_get_ui (min2);
-
-    // cout << "step:" << p << "-" << "init1:" << init1 << "-" << "init2:" << init2 << endl;
 
     //starting with smallest polynomial exprsesed as (a+pk)^2 - N, iterate through (a+ pk')^2 - N
     mpz_t res;
     mpz_init(res);
 
-    for (int j = init1; j < size_SI; j = j + step){
-      // cout << "idx:" << j << endl;
-      int q = mpz_cmp_ui(SI[j].poly, 1);
-      //If it is not yet 1, divide by p util applicable
-      if (q != 0){
-        power = 0;
-        q = mpz_divisible_ui_p(SI[j].poly, step);
-        // cout << "Sieving Polynomial" << SI[j].poly << "step: " << step << endl;
-        while (q != 0){
-          mpz_divexact_ui(SI[j].poly, SI[j].poly, step);
-          power += 1;
-          q = mpz_divisible_ui_p(SI[j].poly, step);
-        }
-        // cout << power << endl;
-        power_storage[i][j] = power; //make this the desired power
-        q = mpz_cmp_ui(SI[j].poly, 1);
-        //If at 1 after step, add to counter and note that it is done in the power_storage array
-        if (q == 0){
-          counter += 1;
-          power_storage[size_FB][j] = 1;
-          // cout << "We are here!" << endl;
-        }
-      }
-    }
-
     //identical to above
-    for (int j = init2; j < size_SI; j = j + step){
+    prime_divide(SI, power_storage, size_SI, size_FB, init1, step, &counter, i);
+    prime_divide(SI, power_storage, size_SI, size_FB, init2, step, &counter, i);
+
+    cout << "count:" << counter << endl;
+
+
+    // //if there are enough relations, it is time to return
+    if (counter >= size_FB + 10){
+      return power_storage;
+    }
+  }
+  return power_storage;
+
+
+}
+
+void prime_divide(polynomial_element* SI, int** power_storage, int size_SI, int size_FB, int smallest, int prime, int* counter, int i){
+    int power;
+
+    int step = prime;
+    for (int j = smallest; j < size_SI; j = j + step){
       // cout << "idx:" << j << endl;
       int q = mpz_cmp_ui(SI[j].poly, 1);
       if (q != 0){
@@ -361,22 +297,43 @@ int** sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, int fbs, 
         power_storage[i][j] = power;
         q = mpz_cmp_ui(SI[j].poly, 1);
         if (q == 0){
-          counter += 1;
+          *counter += 1;
           power_storage[size_FB][j] = 1;
           // cout << "We are here!" << endl;
         }
       }
     }
+}
 
-    cout << "count:" << counter << endl;
+int prime_find_min(int size_SI, mpz_t a, mpz_t p, mpz_t min, mpz_t T, mpz_t r, mpz_t idx){
+  for (int j = 0; j < size_SI; j++){
+      //for each prime, figure out the smallest polynomial expressed as (a+pk)^2 - N
+      mpz_set_ui(idx, j);
+      mpz_add(idx, idx, T);
+      mpz_sub(idx, idx, a);
+      //int test = mpz_cmp_ui(p, 0);
 
+      //cout << "idx:" << idx << endl;
+      //check if i congruent to a - T mod p
+      mpz_mod(r, idx, p);
 
-    // //if there are enough relations, it is time to return
-    if (counter >= size_FB + 10){
-      return power_storage;
+      int q = mpz_cmp_ui(r, 0);
+      if (q == 0){
+        mpz_set_ui(min, j);
+        // cout <<  << endl;
+        //cout << min1 << endl;
+        break;
+      }
     }
-  }
-  return power_storage;
+
+    return mpz_get_ui (min);
+}
+
+
+
+void solve_matrix(){
+  MatrixXf A = MatrixXf::Random(3, 2);
+  VectorXf b = VectorXf::Random(3);
 
 
 }
