@@ -17,7 +17,7 @@ Tai Thongthai and Tarang Saluja
 #include <gmp.h>
 #include <stdarg.h>
 #include <obstack.h>
- 
+
 #include </usr/include/eigen3/Eigen/Dense>
 
 #include "step2.h"
@@ -60,15 +60,14 @@ int main(int argc, char *argv[]){
     //Write complete columns as rows into a text file
     int** relations = sieving_step(SI, FB, N, fbs, pes);
 
-  
 
+    //count number of relations to create array of polynomials which have been factorized
     for (int i = 0; i < pes; i++){
       if (relations[fbs][i] == 1){
         relation_count += 1;
       }
     }
     cout << relation_count << endl;
-
     polynomial_element * SISUB = new polynomial_element[relation_count];
 
     //initialize exponent matrix
@@ -81,7 +80,7 @@ int main(int argc, char *argv[]){
       }
     }
 
-    //Fill out the exponential matrix
+    //Fill out the exponential matrix and also the polynomial array
     int sieve_number = 0;
     for (int i = 0; i < pes; i++){
       if (relations[fbs][i] == 1){
@@ -93,7 +92,7 @@ int main(int argc, char *argv[]){
       }
     }
 
-    //get bit matrix
+    //create and fill out the bit matrix
     int** bit_matrix = new int*[relation_count];
     for (int i = 0; i < relation_count; i++){
       bit_matrix[i] = new int[fbs];
@@ -110,15 +109,9 @@ int main(int argc, char *argv[]){
     for (int i = 0; i < pes; i++){
         if (relations[fbs][i] == 1){
           for (int j = 0; j < fbs; j++){
-            fb << relations[j][i] % 2;
-
-            // cout << "prime:" << FB[j].p << ", power:" << relations[j][i] << endl;
-            // if (relations[i][j] != 0){
-            //   cout << "p:" << FB[i].p << "power: " << relations[i][j] << endl;
-            // }
+            fb << relations[j][i];
           }
           fb << endl;
-          //cout << relations[i][fbs] << endl;
         }
     }
     fb.close();
@@ -128,14 +121,8 @@ int main(int argc, char *argv[]){
         if (relations[fbs][i] == 1){
           for (int j = 0; j < fbs; j++){
             fb << relations[j][i];
-
-            // cout << "prime:" << FB[j].p << ", power:" << relations[j][i] << endl;
-            // if (relations[i][j] != 0){
-            //   cout << "p:" << FB[i].p << "power: " << relations[i][j] << endl;
-            // }
           }
           fb << endl;
-          //cout << relations[i][fbs] << endl;
         }
     }
     fb.close();
@@ -145,7 +132,7 @@ int main(int argc, char *argv[]){
     return 0;
 }
 
-//load in the factor base elements and the corresponding values of a and b
+//load in the factor base elements and the corresponding values of a and b which correspond to the smallest values a and b such that a^2 - T is 0 mod p and b^2 - T is 0 mod p.
 prime_element * load(mpz_t N, int fbs){
 
     prime_element * FB = (prime_element *)calloc(fbs, sizeof(prime_element));
@@ -213,6 +200,8 @@ polynomial_element * generate_sieving_interval(mpz_t N){
     return SI;
 }
 
+
+//step where we repeatedly divide until we have the required number of relations
 int** sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, int fbs, int pes){
 
   //intialize values and recompute value for T
@@ -249,18 +238,16 @@ int** sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, int fbs, 
 
     cout << i << endl;
 
-    // cout << p << "-"<< a << "-"<< b<< endl;
+    //find smallest indices such that the polynomial evaluation at that index is divisble by p
     int init1 = prime_find_min(size_SI, a, p, min1, T, r, idx);
     int init2 = prime_find_min(size_SI, b, p, min2, T, r, idx);
 
     //prepare for for loop
     int step = mpz_get_ui (p);
-
-    //starting with smallest polynomial exprsesed as (a+pk)^2 - N, iterate through (a+ pk')^2 - N
     mpz_t res;
     mpz_init(res);
 
-    //identical to above
+    //go ahead and do all of the divisions
     prime_divide(SI, power_storage, size_SI, size_FB, init1, step, &counter, i);
     prime_divide(SI, power_storage, size_SI, size_FB, init2, step, &counter, i);
 
@@ -277,29 +264,29 @@ int** sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, int fbs, 
 
 }
 
+//divide all the numbers by the prime when applicable
 void prime_divide(polynomial_element* SI, int** power_storage, int size_SI, int size_FB, int smallest, int prime, int* counter, int i){
     int power;
-
     int step = prime;
+
+    //iterate through all numbers which will be divisble by prime
     for (int j = smallest; j < size_SI; j = j + step){
-      // cout << "idx:" << j << endl;
+      //keep dividing until 1
       int q = mpz_cmp_ui(SI[j].poly, 1);
       if (q != 0){
         power = 0;
         q = mpz_divisible_ui_p(SI[j].poly, step);
-        // cout << "Sieving Polynomial" << SI[j].poly << "step: " << step << endl;
         while (q != 0){
           mpz_divexact_ui(SI[j].poly, SI[j].poly, step);
           power += 1;
           q = mpz_divisible_ui_p(SI[j].poly, step);
         }
-        // cout << power << endl;
+        //store the power
         power_storage[i][j] = power;
         q = mpz_cmp_ui(SI[j].poly, 1);
         if (q == 0){
-          *counter += 1;
+          *counter += 1; //iterate counter if it has now been reduced to 1
           power_storage[size_FB][j] = 1;
-          // cout << "We are here!" << endl;
         }
       }
     }
@@ -311,17 +298,13 @@ int prime_find_min(int size_SI, mpz_t a, mpz_t p, mpz_t min, mpz_t T, mpz_t r, m
       mpz_set_ui(idx, j);
       mpz_add(idx, idx, T);
       mpz_sub(idx, idx, a);
-      //int test = mpz_cmp_ui(p, 0);
 
-      //cout << "idx:" << idx << endl;
       //check if i congruent to a - T mod p
       mpz_mod(r, idx, p);
 
       int q = mpz_cmp_ui(r, 0);
       if (q == 0){
         mpz_set_ui(min, j);
-        // cout <<  << endl;
-        //cout << min1 << endl;
         break;
       }
     }
