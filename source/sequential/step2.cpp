@@ -28,7 +28,8 @@ int main(int argc, char *argv[]){
 
     //Set value of N
     mpz_t N;
-    mpz_init_set_ui(N, 10062757);
+    mpz_init(N);
+    mpz_set_str(N, "8876044532898802067");
 
     //current size of sieving interval
     int pes = 80000;
@@ -256,6 +257,7 @@ int** sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, int fbs, 
 
     // //if there are enough relations, it is time to return
     if (counter >= size_FB + 10){
+      cout << "We are here!" << endl;
       return power_storage;
     }
   }
