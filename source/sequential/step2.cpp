@@ -61,6 +61,8 @@ int main(int argc, char *argv[]){
     //Write complete columns as rows into a text file
     int** relations = sieving_step(SI, FB, N, fbs, pes);
 
+    cout << "Stored in the desired position we have " << relations[0][1] << endl;
+
 
     //count number of relations to create array of polynomials which have been factorized
     for (int i = 0; i < pes; i++){
@@ -274,11 +276,12 @@ int** sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, int fbs, 
 
 //divide all the numbers by the prime when applicable
 void prime_divide(polynomial_element* SI, int** power_storage, int size_SI, int size_FB, int smallest, int prime, int* counter, int i){
-    int power;
+    int power = 0;
     int step = prime;
 
     //iterate through all numbers which will be divisble by prime
     for (int j = smallest; j < size_SI; j = j + step){
+
       //keep dividing until 1
       int q = mpz_cmp_ui(SI[j].poly, 1);
       if (q != 0){
@@ -290,7 +293,8 @@ void prime_divide(polynomial_element* SI, int** power_storage, int size_SI, int 
           q = mpz_divisible_ui_p(SI[j].poly, step);
         }
         //store the power
-        power_storage[i][j] = power;
+        power_storage[i][j] += power;
+
         q = mpz_cmp_ui(SI[j].poly, 1);
         if (q == 0){
           *counter += 1; //iterate counter if it has now been reduced to 1
@@ -306,7 +310,6 @@ int prime_find_min(int size_SI, mpz_t a, mpz_t p, mpz_t min, mpz_t T, mpz_t r, m
       mpz_set_ui(idx, j);
       mpz_add(idx, idx, T);
       mpz_sub(idx, idx, a);
-
       //check if i congruent to a - T mod p
       mpz_mod(r, idx, p);
 
