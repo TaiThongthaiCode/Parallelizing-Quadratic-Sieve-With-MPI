@@ -93,6 +93,7 @@ int main(int argc, char *argv[]){
       }
     }
 
+
     //create and fill out the bit matrix
     int** bit_matrix = new int*[relation_count];
     for (int i = 0; i < relation_count; i++){
@@ -102,10 +103,13 @@ int main(int argc, char *argv[]){
       }
     }
 
-
-
-
     ofstream fb;
+    fb.open ("Smooth_Num.txt");
+    for (int i = 0; i < count; i++){
+      fb << mpz_get_str(NULL, 10, SISUB[i].poly) << endl;
+    }
+    fb.close();
+
     fb.open ("Expo_Matrix.txt");
     for (int i = 0; i < pes; i++){
         if (relations[fbs][i] == 1){
@@ -238,10 +242,12 @@ int** sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, int fbs, 
     mpz_init_set_ui(b, FB[i].b);
 
     cout << i << endl;
+    cout << "The prime is " << p << " " << endl;
 
     //find smallest indices such that the polynomial evaluation at that index is divisble by p
     int init1 = prime_find_min(size_SI, a, p, min1, T, r, idx);
     int init2 = prime_find_min(size_SI, b, p, min2, T, r, idx);
+    cout << "For our inits we have " << init1 << " and " << init2 << " " << endl;
 
     //prepare for for loop
     int step = mpz_get_ui (p);
