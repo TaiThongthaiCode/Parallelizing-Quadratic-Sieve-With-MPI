@@ -29,7 +29,7 @@ int main(int argc, char *argv[]){
     //Set value of N
     mpz_t N;
     mpz_init(N);
-    mpz_set_str(N, "990376505031955291131092008489", 10);
+    mpz_set_str(N, "39203", 10);
 
     //current size of sieving interval
     int pes = 80000;
@@ -116,6 +116,7 @@ int main(int argc, char *argv[]){
     for (int i = 0; i < pes; i++){
         if (relations[fbs][i] == 1){
           for (int j = 0; j < fbs; j++){
+            relations[j][i] = relations[j][i] % 2;
             fb << relations[j][i];
           }
           fb << endl;
@@ -124,7 +125,7 @@ int main(int argc, char *argv[]){
     fb.close();
 
     fb.open ("Power_Matrix.txt");
-    for (int i = 0; i < pes; i++){
+    for (int i = 0; i < relation_count; i++){
         if (relations[fbs][i] == 1){
           for (int j = 0; j < fbs; j++){
             fb << relations[j][i];

@@ -25,7 +25,7 @@ int main(int argc, char *argv[]){
     //Setting some value of N = pq for prime p and prime q.
     mpz_t N;
     mpz_init(N);
-    mpz_set_str(N, "990376505031955291131092008489", 10);
+    mpz_set_str(N, "39203", 10);
 
     //calculate number of digits
     size_t j = mpz_sizeinbase (N, 10);
@@ -164,10 +164,11 @@ int mpz_sqrtm(mpz_ptr rop, mpz_t a, mpz_t q)
   cout << "Prior to while loop" << endl;
   while (mpz_legendre( g, q ) != -1)
     {
-      cout << "In While Loop" << endl;
       mpz_random(g, 2);
       mpz_mod(g, g, temp);
       mpz_add_ui(g, g, 1);
+
+      cout << g << endl;
     }
    cout << "Done with while loop" << endl;
 
