@@ -75,33 +75,14 @@ int main(int argc, char *argv[]){
 
     //initialize exponent matrix
     int count = 0;
-    int** power_matrix = new int*[relation_count];
-    for (int i = 0; i < relation_count; i++){
-      power_matrix[i] = new int[fbs+1];
-      for (int j = 0; j< fbs; j++){
-        power_matrix[i][j] = 0;
-      }
-    }
 
-    //Fill out the exponential matrix and also the polynomial array
+
+    //Fill out the  polynomial array
     int sieve_number = 0;
     for (int i = 0; i < pes; i++){
       if (relations[fbs][i] == 1){
-        for (int j = 0; j < fbs; j++){
-          power_matrix[sieve_number][j] = relations[j][i];
-        }
         mpz_set(SISUB[count].poly, SISAVE[i].poly);
         count += 1;
-      }
-    }
-
-
-    //create and fill out the bit matrix
-    int** bit_matrix = new int*[relation_count];
-    for (int i = 0; i < relation_count; i++){
-      bit_matrix[i] = new int[fbs];
-      for (int j = 0; j< fbs; j++){
-        bit_matrix[i][j] = power_matrix[i][j] %2;
       }
     }
 
