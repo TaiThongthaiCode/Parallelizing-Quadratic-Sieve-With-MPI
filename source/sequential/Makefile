@@ -41,4 +41,6 @@ $(GAUSSPROG): $(GAUSSPROG).o
 
 clean:
 	rm -f *.o
+	rm -f *.txt
 	rm -f $(MAINPROG)
+	rm -f $(SIEVEPROG)
