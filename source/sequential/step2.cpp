@@ -61,9 +61,6 @@ int main(int argc, char *argv[]){
     //Write complete columns as rows into a text file
     int** relations = sieving_step(SI, FB, N, fbs, pes);
 
-    cout << "Stored in the desired position we have " << relations[0][1] << endl;
-
-
     //count number of relations to create array of polynomials which have been factorized
     for (int i = 0; i < pes; i++){
       if (relations[fbs][i] == 1){
@@ -94,7 +91,7 @@ int main(int argc, char *argv[]){
     fb.close();
 
     fb.open ("Expo_Matrix.txt");
-    for (int i = 0; i < pes; i++){
+    for (int i = 0; i < relation_count; i++){
         if (relations[fbs][i] == 1){
           for (int j = 0; j < fbs; j++){
             relations[j][i] = relations[j][i] % 2;
@@ -225,13 +222,9 @@ int** sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, int fbs, 
     mpz_init_set_ui(a, FB[i].a);
     mpz_init_set_ui(b, FB[i].b);
 
-    cout << i << endl;
-    cout << "The prime is " << p << " " << endl;
-
     //find smallest indices such that the polynomial evaluation at that index is divisble by p
     int init1 = prime_find_min(size_SI, a, p, min1, T, r, idx);
     int init2 = prime_find_min(size_SI, b, p, min2, T, r, idx);
-    cout << "For our inits we have " << init1 << " and " << init2 << " " << endl;
 
     //prepare for for loop
     int step = mpz_get_ui (p);
@@ -286,6 +279,7 @@ void prime_divide(polynomial_element* SI, int** power_storage, int size_SI, int 
     }
 }
 
+
 int prime_find_min(int size_SI, mpz_t a, mpz_t p, mpz_t min, mpz_t T, mpz_t r, mpz_t idx){
   for (int j = 0; j < size_SI; j++){
       //for each prime, figure out the smallest polynomial expressed as (a+pk)^2 - N
@@ -294,14 +288,12 @@ int prime_find_min(int size_SI, mpz_t a, mpz_t p, mpz_t min, mpz_t T, mpz_t r, m
       mpz_sub(idx, idx, a);
       //check if i congruent to a - T mod p
       mpz_mod(r, idx, p);
-
       int q = mpz_cmp_ui(r, 0);
       if (q == 0){
         mpz_set_ui(min, j);
         break;
       }
     }
-
     return mpz_get_ui (min);
 }
 
