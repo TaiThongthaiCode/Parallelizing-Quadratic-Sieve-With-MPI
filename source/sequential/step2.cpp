@@ -91,7 +91,7 @@ int main(int argc, char *argv[]){
     fb.close();
 
     fb.open ("Expo_Matrix.txt");
-    for (int i = 0; i < relation_count; i++){
+    for (int i = 0; i < pes; i++){
         if (relations[fbs][i] == 1){
           for (int j = 0; j < fbs; j++){
             relations[j][i] = relations[j][i] % 2;
@@ -103,7 +103,7 @@ int main(int argc, char *argv[]){
     fb.close();
 
     fb.open ("Power_Matrix.txt");
-    for (int i = 0; i < relation_count; i++){
+    for (int i = 0; i < pes; i++){
         if (relations[fbs][i] == 1){
           for (int j = 0; j < fbs; j++){
             fb << relations[j][i];
