@@ -29,10 +29,10 @@ int main(int argc, char *argv[]){
     //Set value of N
     mpz_t N;
     mpz_init(N);
-    mpz_set_str(N, "24345456489798204950238943813", 10);
+    mpz_set_str(N, "121651", 10);
 
     //current size of sieving interval
-    int pes = 4000000;
+    int pes = 80000;
     polynomial_element * SI = generate_sieving_interval(N);
     polynomial_element * SISAVE = generate_sieving_interval(N);
 
@@ -90,11 +90,10 @@ int main(int argc, char *argv[]){
     }
     fb.close();
 
-    fb.open ("Expo_Matrix.txt");
+    fb.open ("Power_Matrix.txt");
     for (int i = 0; i < pes; i++){
         if (relations[fbs][i] == 1){
           for (int j = 0; j < fbs; j++){
-            relations[j][i] = relations[j][i] % 2;
             fb << relations[j][i];
           }
           fb << endl;
@@ -102,10 +101,11 @@ int main(int argc, char *argv[]){
     }
     fb.close();
 
-    fb.open ("Power_Matrix.txt");
+    fb.open ("Expo_Matrix.txt");
     for (int i = 0; i < pes; i++){
         if (relations[fbs][i] == 1){
           for (int j = 0; j < fbs; j++){
+            relations[j][i] = relations[j][i] % 2;
             fb << relations[j][i];
           }
           fb << endl;
@@ -161,7 +161,7 @@ prime_element * load(mpz_t N, int fbs){
 //create the sieving iterval of size 80, 000
 polynomial_element * generate_sieving_interval(mpz_t N){
 
-    int size = 4000000;
+    int size = 80000;
     polynomial_element * SI = new polynomial_element[size];
 
     //Find smallest value of T such that T^2 - N >= 0
