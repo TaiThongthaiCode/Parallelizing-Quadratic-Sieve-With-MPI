@@ -29,12 +29,15 @@ int main(int argc, char *argv[]){
     //Set value of N
     mpz_t N;
     mpz_init(N);
-    mpz_set_str(N, "121651", 10);
+    mpz_set_str(N, "10141516181932272496105647768491411342341", 10);
+
+    size_t j = mpz_sizeinbase (N, 10);
+    int size = static_cast<int>(j);
 
     //current size of sieving interval
-    int pes = 1000000;
-    polynomial_element * SI = generate_sieving_interval(N);
-    polynomial_element * SISAVE = generate_sieving_interval(N);
+    int pes = 386*size*size -23209.3*size + 2352768;
+    polynomial_element * SI = generate_sieving_interval(N, pes);
+    polynomial_element * SISAVE = generate_sieving_interval(N, pes);
 
     int relation_count = 0;
 
@@ -68,6 +71,7 @@ int main(int argc, char *argv[]){
       }
     }
     cout << relation_count << endl;
+    cout << "PES: " << pes << endl;
     polynomial_element * SISUB = new polynomial_element[relation_count];
 
     //initialize exponent matrix
@@ -159,9 +163,9 @@ prime_element * load(mpz_t N, int fbs){
 }
 
 //create the sieving iterval of size 80, 000
-polynomial_element * generate_sieving_interval(mpz_t N){
+polynomial_element * generate_sieving_interval(mpz_t N, int pes){
 
-    int size = 1000000;
+    int size = pes;
     polynomial_element * SI = new polynomial_element[size];
 
     //Find smallest value of T such that T^2 - N >= 0
