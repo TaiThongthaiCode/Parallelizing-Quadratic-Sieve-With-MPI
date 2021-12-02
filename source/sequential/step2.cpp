@@ -242,6 +242,9 @@ int** sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, int fbs, 
     if (counter >= size_FB + 10){
       cout << "We are here!" << endl;
       return power_storage;
+    } else{
+      cout << "Not enough relations found. Increase sieving interval size" << endl;
+      exit(0);
     }
   }
   return power_storage;
