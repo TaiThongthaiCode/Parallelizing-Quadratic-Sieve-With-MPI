@@ -29,7 +29,7 @@ int main(int argc, char *argv[]){
     //Set value of N
     mpz_t N;
     mpz_init(N);
-    mpz_set_str(N, "1503496893083", 10);
+    mpz_set_str(N, "990376505031955291131092008489", 10);
 
     //current size of sieving interval
     int pes = 80000;
