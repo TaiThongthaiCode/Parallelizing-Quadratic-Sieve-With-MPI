@@ -32,7 +32,7 @@ int main(int argc, char *argv[]){
     mpz_set_str(N, "24345456489798204950238943813", 10);
 
     //current size of sieving interval
-    int pes = 80000;
+    int pes = 4000000;
     polynomial_element * SI = generate_sieving_interval(N);
     polynomial_element * SISAVE = generate_sieving_interval(N);
 
@@ -161,7 +161,7 @@ prime_element * load(mpz_t N, int fbs){
 //create the sieving iterval of size 80, 000
 polynomial_element * generate_sieving_interval(mpz_t N){
 
-    int size = 80000;
+    int size = 4000000;
     polynomial_element * SI = new polynomial_element[size];
 
     //Find smallest value of T such that T^2 - N >= 0

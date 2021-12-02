@@ -36,9 +36,9 @@ int main(int argc, char *argv[]){
     if (size < 10) {
       fbs = 150;
     } else if (size < 25) {
-      fbs = 1560;
+      fbs = 500;
     } else if (size < 75) {
-      fbs = 6000;
+      fbs = 2000;
     } else {
       fbs = 60000;
     }
