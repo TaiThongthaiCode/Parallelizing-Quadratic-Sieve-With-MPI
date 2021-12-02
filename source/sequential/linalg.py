@@ -5,13 +5,13 @@
 import qs_helper as qs
 
 def main():
-    N = 39203
+    N = 121651
     bit_matrix = []
     smooth_nums = []
 
     with open("Expo_Matrix.txt") as f:
         for line in f:
-            relation = [int(line[i])%2 for i in range(len(line)-1)]
+            relation = [int(line[i]) for i in range(len(line)-1)]
             bit_matrix.append(relation)
         f.close()
 
@@ -34,6 +34,7 @@ def main():
 
 
 
+    qs.transpose(bit_matrix)
     bit_matrix.reverse()
     smooth_nums.reverse()
     # print(smooth_nums)
