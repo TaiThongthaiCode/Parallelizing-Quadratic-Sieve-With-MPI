@@ -1,10 +1,10 @@
 # Configure compiler settings
-CXX=clang++
-CXXFLAGS=-g -std=c++11 -Werror
-# The header files for the program
-# HFILES = $(shell ls -1 *.h)
-# UnitTest++ keeps its object files in this directory.
-UNITTEST_LIB = -lUnitTest++
+CC = mpicc
+CFLAGS = -g -Wall -Wvla -Werror -Wno-error=unused-variable -Wno-error=unused-but-set-variable
+
+LIBDIR = -L./
+INCDIR = -I./
+
 
 MAINPROG = step1
 SIEVEPROG = step2
