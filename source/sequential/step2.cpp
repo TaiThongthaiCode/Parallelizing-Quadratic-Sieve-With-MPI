@@ -35,7 +35,8 @@ int main(int argc, char *argv[]){
     int size = static_cast<int>(j);
 
     //current size of sieving interval
-    int pes = 386*size*size -23209.3*size + 2352768;
+    //int pes = 386*size*size -23209.3*size + 2352768;
+    int pes = 80000;
     polynomial_element * SI = generate_sieving_interval(N, pes);
     polynomial_element * SISAVE = generate_sieving_interval(N, pes);
 
