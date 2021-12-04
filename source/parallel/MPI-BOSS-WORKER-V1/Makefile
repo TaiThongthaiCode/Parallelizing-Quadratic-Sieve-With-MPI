@@ -1,6 +1,8 @@
 # Configure compiler settings
-CC = mpicc
-CFLAGS = -g -Wall -Wvla -Werror -Wno-error=unused-variable -Wno-error=unused-but-set-variable
+CC = mpic++
+CFLAGS =-g -std=c++11 -Werror
+#-g -Wall -Wvla -Werror
+#-Wno-error=unused-variable -Wno-error=unused-but-set-variable
 
 LIBDIR = -L./
 INCDIR = -I./
@@ -15,24 +17,24 @@ all: $(MAINPROG) $(SIEVEPROG) $(GAUSSPROG)
 
 # This target builds your main program.
 $(MAINPROG): $(MAINPROG).o
-	$(CXX) $(CXXFLAGS) -o $@ $(MAINPROG).o -lgmpxx -lgmp
+	$(CC) $(CFLAGS) -o $@ $(MAINPROG).o -lgmpxx -lgmp
 # This target describes how to compile a .o file from a .cpp file.
 %.o: %.cpp $(HFILES)
-	$(CXX) $(CXXFLAGS) -c -o $@ $<
+	$(CC) $(CFLAGS) -c -o $@ $<
 
 # This target builds your main program.
 $(SIEVEPROG): $(SIEVEPROG).o
-	$(CXX) $(CXXFLAGS) -o $@ $(SIEVEPROG).o -lgmpxx -lgmp
+	$(CC) $(CFLAGS) -o $@ $(SIEVEPROG).o -lgmpxx -lgmp
 # This target describes how to compile a .o file from a .cpp file.
 %.o: %.cpp $(HFILES)
-	$(CXX) $(CXXFLAGS) -c -o $@ $<
+	$(CC) $(CFLAGS) -c -o $@ $<
 
 # This target builds your main program.
 $(GAUSSPROG): $(GAUSSPROG).o
-	$(CXX) $(CXXFLAGS) -o $@ $(GAUSSPROG).o -lgmpxx -lgmp
+	$(CC) $(CFLAGS) -o $@ $(GAUSSPROG).o -lgmpxx -lgmp
 # This target describes how to compile a .o file from a .cpp file.
 %.o: %.cpp $(HFILES)
-	$(CXX) $(CXXFLAGS) -c -o $@ $<
+	$(CC) $(CFLAGS) -c -o $@ $<
 
 
 

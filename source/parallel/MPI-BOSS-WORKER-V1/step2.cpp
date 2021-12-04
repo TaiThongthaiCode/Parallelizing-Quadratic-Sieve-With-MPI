@@ -17,15 +17,22 @@ Tai Thongthai and Tarang Saluja
 #include <gmp.h>
 #include <stdarg.h>
 #include <obstack.h>
+#include <mpi.h>
 
 #include </usr/include/eigen3/Eigen/Dense>
 
 #include "step2.h"
 
-using namespace Eigen;
 
 int main(int argc, char *argv[]){
+    int block_size = 0;
+    unsigned int rank = 0;
+    unsigned long num_proc= 0;
+    MPI_Status status;
 
+    MPI_Init(&argc, &argv);
+    MPI_Comm_size(MPI_COMM_WORLD, (int*) &num_proc);
+    MPI_Comm_rank(MPI_COMM_WORLD, (int*) &rank);
     //Set value of N
     mpz_t N;
     mpz_init(N);
@@ -37,6 +44,7 @@ int main(int argc, char *argv[]){
     //current size of sieving interval
     //int pes = 386*size*size -23209.3*size + 2352768;
     int pes = 80000;
+    block_size = 80000/(10*num_proc);
     polynomial_element * SI = generate_sieving_interval(N, pes);
     polynomial_element * SISAVE = generate_sieving_interval(N, pes);
 
@@ -63,7 +71,8 @@ int main(int argc, char *argv[]){
 
 
     //Write complete columns as rows into a text file
-    int** relations = sieving_step(SI, FB, N, fbs, pes);
+    int** relations = sieving_step(SI, FB, N, fbs, pes, rank, status, block_size);
+
 
     //count number of relations to create array of polynomials which have been factorized
     for (int i = 0; i < pes; i++){
@@ -117,8 +126,6 @@ int main(int argc, char *argv[]){
         }
     }
     fb.close();
-
-    solve_matrix();
 
     return 0;
 }
@@ -193,7 +200,31 @@ polynomial_element * generate_sieving_interval(mpz_t N, int pes){
 
 
 //step where we repeatedly divide until we have the required number of relations
-int** sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, int fbs, int pes){
+int** sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, int fbs, int rank, int pes, MPI_Status status, int block_size){
+
+  int continue_sieving;
+  int block_one_base;
+
+  if (rank == 0){
+    cout << "We are in the rank 0" << endl;
+    int counter = 0;
+    int new_relations = 0;
+    while (counter < fbs + 10){
+      MPI_Recv(&new_relations, 1, MPI_INT, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, &status);
+      counter += new_relations;
+      int location = status.MPI_SOURCE;
+      if (counter > fbs + 10){
+        continue_sieving = 0;
+        MPI_Send(&continue_sieving, 1, MPI_INT, location, 0, MPI_COMM_WORLD);
+      } else{
+        continue_sieving = 1;
+        MPI_Send(&continue_sieving, 1, MPI_INT, location, 0, MPI_COMM_WORLD);
+      }
+    }
+  } else{
+    block_one_base = (rank-1)*block_size;
+  }
+
 
   //intialize values and recompute value for T
   mpz_t T, p, a, b, idx, r, min1, min2;
@@ -305,13 +336,4 @@ int prime_find_min(int size_SI, mpz_t a, mpz_t p, mpz_t min, mpz_t T, mpz_t r, m
       }
     }
     return mpz_get_ui (min);
-}
-
-
-
-void solve_matrix(){
-  MatrixXf A = MatrixXf::Random(3, 2);
-  VectorXf b = VectorXf::Random(3);
-
-
 }
