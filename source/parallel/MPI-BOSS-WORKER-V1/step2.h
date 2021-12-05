@@ -31,6 +31,6 @@ void sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, polynomial
 int **alloc_2d_int(int rows, int cols);
 
 void prime_divide(polynomial_element* SI, int** power_storage, int size_SI, int size_FB, int smallest, int prime, int* counter, int i, int block_size);
-int prime_find_min(int size_SI, mpz_t a, mpz_t p, mpz_t min, mpz_t T, mpz_t r, mpz_t idx, int base_index, int block_size);
+int prime_find_min(int size_SI, mpz_t a, mpz_t p, mpz_t min, mpz_t T, mpz_t r, mpz_t idx, int base_index, int block_size, int rank);
 
 void solve_matrix();

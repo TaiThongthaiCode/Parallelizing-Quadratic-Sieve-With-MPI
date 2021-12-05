@@ -36,7 +36,7 @@ int main(int argc, char *argv[]){
     //Set value of N
     mpz_t N;
     mpz_init(N);
-    mpz_set_str(N, "69", 10);
+    mpz_set_str(N, "103603", 10);
 
     size_t j = mpz_sizeinbase (N, 10);
     int size = static_cast<int>(j);
@@ -69,6 +69,7 @@ int main(int argc, char *argv[]){
     //     // cout << FB[i].p << "-"<< FB[i].a << "-"<< FB[i].b << endl;
     // }
 
+    cout << "Before sieve" << endl;
     //Write complete columns as rows into a text file
     sieving_step(SI, FB, N, SISAVE, fbs, pes, rank, status, block_size, num_proc);
 
@@ -207,69 +208,76 @@ void sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, polynomial
   int size_SI = pes;
   int power;
   int size;
-
   int continue_sieving = 1;
   int block_base;
+
+  //Find smallest value of T such that T^2 - N >= 0
+  mpz_t Tsq, res;
+  mpz_init(Tsq);
+  mpz_init(res);
+  mpz_init_set_ui(T, 1);
+  mpz_root(T, N, 2); // T = sqrt(N)
+  mpz_add_ui(T, T, 1); //Buffer T by one to ensure non negativity
 
   int** power_storage;
   power_storage = alloc_2d_int(size_FB + 1, block_size);
 
   if (rank == 0){
 
-    ofstream smooth_num_file;
-    smooth_num_file.open ("Smooth_Num.txt");
-
-    ofstream expo_matrix_file;
-    expo_matrix_file.open ("Expo_Matrix.txt");
-
-    ofstream bit_matrix_file;
-    bit_matrix_file.open("Bit_Matrix.txt");
-
-
-    cout << "We are in the rank 0" << endl;
-    int total_counter = 0;
-    int new_relations = 0;
-    while (total_counter < 6){
-      MPI_Recv(&new_relations, 1, MPI_INT, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, &status);
-      int location = status.MPI_SOURCE;
-      cout << "We find location : " << location << endl;
-      total_counter += new_relations;
-      cout << new_relations << endl;
-
-
-      size = block_size * (size_FB + 1);
-      MPI_Recv(&power_storage[0][0], size, MPI_INT, location, 0, MPI_COMM_WORLD, &status);
-
-
-      //change name to relations later
-      for (int i = 0; i < block_size; i++){
-        if (power_storage[fbs][i] == 1){
-          smooth_num_file << mpz_get_str(NULL, 10, SI_SAVE[i+block_base].poly) << endl;
-          for (int j = 0; j < fbs; j++){
-            expo_matrix_file << power_storage[j][i];
-            cout << power_storage[j][i];
-            power_storage[j][i] = power_storage[j][i] % 2;
-            bit_matrix_file << power_storage[j][i];
-          }
-          cout << endl;
-          expo_matrix_file << endl;
-          bit_matrix_file << endl;
-        }
-      }
-
-      // if (total_counter > size_FB + 10){
-      //   continue_sieving = 0;
-      //   MPI_Send(&continue_sieving, 1, MPI_INT, location, 0, MPI_COMM_WORLD);
-      // } else{
-      //   continue_sieving = 1;
-      //   MPI_Send(&continue_sieving, 1, MPI_INT, location, 0, MPI_COMM_WORLD);
-      // }
-
-   }
-   smooth_num_file.close();
-   expo_matrix_file.close();
-   bit_matrix_file.close();
-   cout << "We here" << endl;
+   //  ofstream smooth_num_file;
+   //  smooth_num_file.open ("Smooth_Num.txt");
+   //
+   //  ofstream expo_matrix_file;
+   //  expo_matrix_file.open ("Expo_Matrix.txt");
+   //
+   //  ofstream bit_matrix_file;
+   //  bit_matrix_file.open("Bit_Matrix.txt");
+   //
+   //
+   //  cout << "We are in the rank 0" << endl;
+   //  int total_counter = 0;
+   //  int new_relations = 0;
+   //  while (total_counter < size_FB + 10){
+   //    MPI_Recv(&new_relations, 1, MPI_INT, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, &status);
+   //    int location = status.MPI_SOURCE;
+   //    cout << "We find location : " << location << endl;
+   //    total_counter += new_relations;
+   //    cout << new_relations << endl;
+   //
+   //
+   //    size = block_size * (size_FB + 1);
+   //    MPI_Recv(&power_storage[0][0], size, MPI_INT, location, 0, MPI_COMM_WORLD, &status);
+   //
+   //
+   //    //change name to relations later
+   //    for (int i = 0; i < block_size; i++){
+   //      if (power_storage[fbs][i] == 1){
+   //        smooth_num_file << mpz_get_str(NULL, 10, SI_SAVE[i+block_base].poly) << endl;
+   //        for (int j = 0; j < fbs; j++){
+   //          expo_matrix_file << power_storage[j][i];
+   //          cout << power_storage[j][i];
+   //          power_storage[j][i] = power_storage[j][i] % 2;
+   //          bit_matrix_file << power_storage[j][i];
+   //        }
+   //        cout << endl;
+   //        expo_matrix_file << endl;
+   //        bit_matrix_file << endl;
+   //      }
+   //    }
+   //
+   //    // if (total_counter > size_FB + 10){
+   //    //   continue_sieving = 0;
+   //    //   MPI_Send(&continue_sieving, 1, MPI_INT, location, 0, MPI_COMM_WORLD);
+   //    // } else{
+   //    //   continue_sieving = 1;
+   //    //   MPI_Send(&continue_sieving, 1, MPI_INT, location, 0, MPI_COMM_WORLD);
+   //    // }
+   //
+   // }
+   // smooth_num_file.close();
+   // expo_matrix_file.close();
+   // bit_matrix_file.close();
+   // cout << "We here" << endl;
  } else{
 
    // int val = rank;
@@ -302,6 +310,7 @@ void sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, polynomial
 
     while (continue_sieving == 1){
 
+
       //initialize matrix which stores max power of a prime which divides any given polynomial evaluation
       int** power_storage;
       power_storage = alloc_2d_int(size_FB + 1, block_size);
@@ -315,10 +324,14 @@ void sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, polynomial
         mpz_init_set_ui(a, FB[i].a);
         mpz_init_set_ui(b, FB[i].b);
 
+        cout << "Before finding minimum primes" << endl;
         //find smallest indices such that the polynomial evaluation at that index is divisble by p
-        int init1 = prime_find_min(size_SI, a, p, min1, T, r, idx, block_base, block_size);
-        int init2 = prime_find_min(size_SI, b, p, min2, T, r, idx, block_base, block_size);
+        int init1 = prime_find_min(size_SI, a, p, min1, T, r, idx, block_base, block_size, rank);
+        cout << "Here right with rank: " << rank << endl;
+        MPI_Barrier(MPI_COMM_WORLD);
+        int init2 = prime_find_min(size_SI, b, p, min2, T, r, idx, block_base, block_size, rank);
 
+        cout << "We are here..." << endl;
         //prepare for for loop
         int step = mpz_get_ui (p);
         mpz_t res;
@@ -334,6 +347,8 @@ void sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, polynomial
         cout << "We are here!" << endl;
         int size = (size_FB + 1) * block_size;
         MPI_Send(&power_storage[0][0], size, MPI_INT, 0, 0, MPI_COMM_WORLD);
+        MPI_Recv(&continue_sieving, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, &status);
+        block_base = block_base + num_proc * block_size;
       }
     }
     MPI_Barrier(MPI_COMM_WORLD);
@@ -385,13 +400,15 @@ void prime_divide(polynomial_element* SI, int** power_storage, int size_SI, int 
 }
 
 
-int prime_find_min(int size_SI, mpz_t a, mpz_t p, mpz_t min, mpz_t T, mpz_t r, mpz_t idx, int base_index, int block_size){
+int prime_find_min(int size_SI, mpz_t a, mpz_t p, mpz_t min, mpz_t T, mpz_t r, mpz_t idx, int base_index, int block_size, int rank){
   for (int j = base_index; j < base_index + block_size; j++){
       //for each prime, figure out the smallest polynomial expressed as (a+pk)^2 - N
       mpz_set_ui(idx, j);
       mpz_add(idx, idx, T);
       mpz_sub(idx, idx, a);
+
       //check if i congruent to a - T mod p
+      cout << "Running through"<< endl;
       mpz_mod(r, idx, p);
       int q = mpz_cmp_ui(r, 0);
       if (q == 0){
@@ -399,5 +416,6 @@ int prime_find_min(int size_SI, mpz_t a, mpz_t p, mpz_t min, mpz_t T, mpz_t r, m
         break;
       }
     }
+    cout << "Returning prime" << endl;
     return mpz_get_ui (min);
 }
