@@ -240,8 +240,6 @@ void sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, polynomial
       size = block_size * (size_FB + 1);
       MPI_Recv(&power_storage[0][0], size, MPI_INT, location, 0, MPI_COMM_WORLD, &status);
 
-      cout << "sugma" << power_storage[1][1] << endl;
-
 
       //change name to relations later
       for (int i = 0; i < block_size; i++){
@@ -274,80 +272,73 @@ void sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, polynomial
    cout << "We here" << endl;
  } else{
 
-   int val = rank;
-   MPI_Send(&val, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
+   // int val = rank;
+   // MPI_Send(&val, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
+   //
+   // int** temp_array = alloc_2d_int(size_FB + 1, block_size);
+   // for (int i = 0; i < size_FB + 1; i++){
+   //   for (int j = 0; j < block_size; j++){
+   //     temp_array[i][j] = rank;
+   //     temp_array[size_FB][j] = 1;
+   //   }
+   // }
+   //
+   //
+   // if (rank == 1 || rank == 3){
+   //   for (int j = 0; j < block_size; j++){
+   //       temp_array[size_FB][j] = 0;
+   //   }
+   // }
+   //
+   //
+   //
+   // size = (size_FB + 1)*block_size;
+   //
+   // MPI_Send(&temp_array[0][0], size, MPI_INT, 0, 0, MPI_COMM_WORLD);
 
-   int** temp_array = alloc_2d_int(size_FB + 1, block_size);
-   for (int i = 0; i < size_FB + 1; i++){
-     for (int j = 0; j < block_size; j++){
-       temp_array[i][j] = rank;
-       temp_array[size_FB][j] = 1;
-     }
-   }
 
 
-   if (rank == 1 || rank == 3){
-     for (int j = 0; j < block_size; j++){
-         temp_array[size_FB][j] = 0;
-     }
-   }
+    block_base = (rank-1)*block_size;
 
+    while (continue_sieving == 1){
 
+      //initialize matrix which stores max power of a prime which divides any given polynomial evaluation
+      int** power_storage;
+      power_storage = alloc_2d_int(size_FB + 1, block_size);
 
-   size = (size_FB + 1)*block_size;
+      // counting number of relations
+      int counter = 0;
 
-   MPI_Send(&temp_array[0][0], size, MPI_INT, 0, 0, MPI_COMM_WORLD);
+      for (int i = 0; i < size_FB; i++){
+        //convert p, a, b to mpz types
+        mpz_init_set_ui(p, FB[i].p);
+        mpz_init_set_ui(a, FB[i].a);
+        mpz_init_set_ui(b, FB[i].b);
 
+        //find smallest indices such that the polynomial evaluation at that index is divisble by p
+        int init1 = prime_find_min(size_SI, a, p, min1, T, r, idx, block_base, block_size);
+        int init2 = prime_find_min(size_SI, b, p, min2, T, r, idx, block_base, block_size);
 
+        //prepare for for loop
+        int step = mpz_get_ui (p);
+        mpz_t res;
+        mpz_init(res);
 
-    // block_base = (rank-1)*block_size;
-    //
-    // while (continue_sieving == 1){
-    //
-    //   //initialize matrix which stores max power of a prime which divides any given polynomial evaluation
-    //   int** power_storage;
-    //   power_storage = alloc_2d_int(size_FB + 1, block_size);
-    //
-    //   // counting number of relations
-    //   int counter = 0;
-    //
-    //   for (int i = 0; i < size_FB; i++){
-    //     //convert p, a, b to mpz types
-    //     mpz_init_set_ui(p, FB[i].p);
-    //     mpz_init_set_ui(a, FB[i].a);
-    //     mpz_init_set_ui(b, FB[i].b);
-    //
-    //     //find smallest indices such that the polynomial evaluation at that index is divisble by p
-    //     int init1 = prime_find_min(size_SI, a, p, min1, T, r, idx, block_base, block_size);
-    //     int init2 = prime_find_min(size_SI, b, p, min2, T, r, idx, block_base, block_size);
-    //
-    //     //prepare for for loop
-    //     int step = mpz_get_ui (p);
-    //     mpz_t res;
-    //     mpz_init(res);
-    //
-    //     //go ahead and do all of the divisions
-    //     prime_divide(SI, power_storage, size_SI, size_FB, init1, step, &counter, i, block_size);
-    //     prime_divide(SI, power_storage, size_SI, size_FB, init2, step, &counter, i, block_size);
-    //
-    //     cout << "count:" << counter << endl;
-    //     }
-    //
-    //     cout << "We are here!" << endl;
-    //     int size = (size_FB + 1) * block_size;
-    //     MPI_Send(&power_storage[0][0], size, MPI_INT, 0, 0, MPI_COMM_WORLD);
-    //   }
+        //go ahead and do all of the divisions
+        prime_divide(SI, power_storage, size_SI, size_FB, init1, step, &counter, i, block_size);
+        prime_divide(SI, power_storage, size_SI, size_FB, init2, step, &counter, i, block_size);
+
+        cout << "count:" << counter << endl;
+        }
+
+        cout << "We are here!" << endl;
+        int size = (size_FB + 1) * block_size;
+        MPI_Send(&power_storage[0][0], size, MPI_INT, 0, 0, MPI_COMM_WORLD);
+      }
     }
     MPI_Barrier(MPI_COMM_WORLD);
     //return power_storage;
   }
-
-
-
-
-
-
-
 
   // if (counter < size_FB + 1){
   //   cout << "Not enough relations found" << endl;
