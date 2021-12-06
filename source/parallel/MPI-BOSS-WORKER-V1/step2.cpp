@@ -233,19 +233,20 @@ void sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, polynomial
 
   if (rank == 0){
 
-   //  ofstream smooth_num_file;
-   //  smooth_num_file.open ("Smooth_Num.txt");
-   //
-   //  ofstream expo_matrix_file;
-   //  expo_matrix_file.open ("Expo_Matrix.txt");
-   //
-   //  ofstream bit_matrix_file;
-   //  bit_matrix_file.open("Bit_Matrix.txt");
-   //
-   //
-   //  cout << "We are in the rank 0" << endl;
-   //  int total_counter = 0;
-   //  int new_relations = 0;
+    ofstream smooth_num_file;
+    smooth_num_file.open ("Smooth_Num.txt");
+
+    ofstream expo_matrix_file;
+    expo_matrix_file.open ("Expo_Matrix.txt");
+
+    ofstream bit_matrix_file;
+    bit_matrix_file.open("Bit_Matrix.txt");
+
+
+    cout << "We are in the rank 0" << endl;
+    int total_counter = 0;
+    int new_relations = 0;
+    MPI_Recv(&new_relations, 1, MPI_INT, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, &status);
    //  while (total_counter < size_FB + 10){
    //    MPI_Recv(&new_relations, 1, MPI_INT, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, &status);
    //    int location = status.MPI_SOURCE;
@@ -328,7 +329,13 @@ void sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, polynomial
       // counting number of relations
       int counter = 0;
 
+
+      ofstream prime_divide_result;
+      prime_divide_result.open("Prime_Divide.txt");
+
+
       for (int i = 0; i < size_FB; i++){
+
         //convert p, a, b to mpz types
         mpz_init_set_ui(p, FB[i].p);
         mpz_init_set_ui(a, FB[i].a);
@@ -340,11 +347,10 @@ void sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, polynomial
 
         unsigned long init2 = prime_find_min(size_SI, b, p, min2, T, r, idx, block_base, block_size, rank);
 
-        if (rank == 1){
-          cout << "We find init1: " << init1 << " and init2: " << init2 << "for prime " << p << endl;
-        }
+        //  ofstream smooth_num_file;
+        //  smooth_num_file.open ("Smooth_Num.txt");
 
-
+        prime_divide_result << "We find init1: " << init1 << " and init2: " << init2 << "for prime " << p << endl;
 
         //prepare for for loop
         int step = mpz_get_ui (p);
@@ -352,18 +358,58 @@ void sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, polynomial
         mpz_init(res);
 
         //go ahead and do all of the divisions
-        if (init1 < size_SI + 1){
-          prime_divide(SI, power_storage, size_SI, size_FB, init1, step, &counter, i, block_size);
-        } else{
-          prime_divide(SI, power_storage, size_SI, size_FB, init2, step, &counter, i, block_size);
-        }
+          if (init1 < size_SI + 1){
+            prime_divide(SI, power_storage, size_SI, size_FB, init1, step, &counter, i, block_size, block_base);
+          }
+
+          if (init2 < size_SI + 1){
+            prime_divide(SI, power_storage, size_SI, size_FB, init2, step, &counter, i, block_size, block_base);
+          }
+
+
+
 
         //cout << "count:" << counter << endl;
         }
+        prime_divide_result.close();
 
-        cout << "We are here!" << rank << endl;
+        int relations_amt = 0;
+        for (int j = 0; j < block_size; j++){
+          if (power_storage[size_FB][j] == 1){
+            relations_amt += 1;
+          }
+        }
+
+        string* smooth_nums = new string[relations_amt];
+        int** relations = alloc_2d_int(relations_amt, size_FB);
+
+        ofstream reduced_relations;
+        reduced_relations.open("reduce_relations.txt");
+
+        ofstream smooth_nums_test;
+        smooth_nums_test.open("smooth_nums_test.txt");
+
+        reduce_and_transpose(smooth_nums, relations, power_storage, block_size, size_FB, SI, block_base);
+
+        for (int i = 0; i < relations_amt; i++){
+          for (int j = 0; j < size_FB; j++){
+            reduced_relations << relations[i][j];
+          }
+          reduced_relations << endl;
+        }
+
+        for (int f= 0; f < relations_amt; f++){
+          smooth_nums_test << smooth_nums[f] << endl;
+        }
+
+        smooth_nums_test.close();
+        reduced_relations.close();
+
+
         int size = (size_FB + 1) * block_size;
-        MPI_Send(&power_storage[0][0], size, MPI_INT, 0, 0, MPI_COMM_WORLD);
+        int ret = MPI_Send(&power_storage[0][0], size, MPI_INT, 0, 0, MPI_COMM_WORLD);
+        cout << "Return val: " << ret << endl;
+        cout << "Sent something" << endl;
         MPI_Recv(&continue_sieving, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, &status);
         block_base = block_base + num_proc * block_size;
       }
@@ -371,12 +417,6 @@ void sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, polynomial
     MPI_Barrier(MPI_COMM_WORLD);
     //return power_storage;
   }
-
-  // if (counter < size_FB + 1){
-  //   cout << "Not enough relations found" << endl;
-  //   exit(0);
-  // }
-  // //return power_storage;
 
 int **alloc_2d_int(int rows, int cols) {
     int *data = (int *)malloc(rows*cols*sizeof(int));
@@ -387,12 +427,12 @@ int **alloc_2d_int(int rows, int cols) {
 }
 
 //divide all the numbers by the prime when applicable
-void prime_divide(polynomial_element* SI, int** power_storage, int size_SI, int size_FB, int smallest, int prime, int* counter, int i, int block_size){
+void prime_divide(polynomial_element* SI, int** power_storage, int size_SI, int size_FB, int smallest, int prime, int* counter, int i, int block_size, int block_base){
     int power = 0;
     int step = prime;
 
     //iterate through all numbers which will be divisble by prime
-    for (int j = smallest; j < smallest + block_size; j = j + step){
+    for (int j = smallest; j < block_base + block_size; j = j + step){
 
       //keep dividing until 1
       int q = mpz_cmp_ui(SI[j].poly, 1);
@@ -426,22 +466,30 @@ unsigned long prime_find_min(int size_SI, mpz_t a, mpz_t p, mpz_t min, mpz_t T, 
       mpz_set_ui(idx, j);
       mpz_add(idx, idx, T);
       mpz_sub(idx, idx, a);
-      //cout << "Rank: " << rank << "starting with" << j << endl;
 
       //check if i congruent to a - T mod p
       mpz_mod(r, idx, p);
       int q = mpz_cmp_ui(r, (unsigned long) 0);
       if (q == 0){
-        //cout << "Rank: " << rank << "Our value of j is: " << j << endl;
         mpz_set_ui(min, j);
-        //char str_min[1024];
-        //mpz_get_str(str_min, 10, min);
-        //cout << "For rank: " << rank << "we find: " << str_min << endl;
         temp = mpz_get_ui (min);
         break;
       }
     }
-    //cout << "Returning prime: " << min << "with rank " << rank << endl;
-    //cout << "Returning: " << temp << endl;
     return temp;
+}
+
+void reduce_and_transpose(string* smooth_nums, int** relations, int** power_storage, int block_size, int size_FB, polynomial_element *SI, int block_base){
+
+  int s_idx = 0;
+  for (int j = 0; j < block_size; j++){
+    if (power_storage[size_FB][j] == 1){
+      string tmp = mpz_get_str(NULL, 10, SI[block_base + j].poly);
+      smooth_nums[s_idx] = tmp;
+      for (int idx = 0; idx < size_FB; idx++){
+        relations[s_idx][idx] = power_storage[idx][j];
+      }
+    }
+    s_idx++;
+  }
 }
