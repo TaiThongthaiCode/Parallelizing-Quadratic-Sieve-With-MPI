@@ -43,8 +43,8 @@ int main(int argc, char *argv[]){
 
     //current size of sieving interval
     //int pes = 386*size*size -23209.3*size + 2352768;
-    int pes = 20;
-    block_size = 20/(10*(num_proc-1));
+    int pes = 80000;
+    block_size = 80000/(10*(num_proc-1));
     polynomial_element * SI = generate_sieving_interval(N, pes);
     polynomial_element * SISAVE = generate_sieving_interval(N, pes);
 
@@ -204,7 +204,7 @@ polynomial_element * generate_sieving_interval(mpz_t N, int pes){
 void sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, polynomial_element *SI_SAVE, int fbs, int pes, int rank, MPI_Status status, int block_size, int num_proc){
 
   //intialize values and recompute value for T
-  mpz_t T, p, a, b, idx, r, min1, min2;
+  mpz_t T, p, a, b, idx, r, min1, min2, poly;
   int size_FB = fbs;
   int size_SI = pes;
   int power;
@@ -223,6 +223,7 @@ void sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, polynomial
   mpz_init(r);
   mpz_init(min1);
   mpz_init(min2);
+  mpz_init(poly);
   mpz_init_set_ui(T, 1);
   mpz_root(T, N, 2); // T = sqrt(N)
   mpz_add_ui(T, T, 1); //Buffer T by one to ensure non negativity
@@ -343,14 +344,19 @@ void sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, polynomial
           cout << "We find init1: " << init1 << " and init2: " << init2 << "for prime " << p << endl;
         }
 
+
+
         //prepare for for loop
         int step = mpz_get_ui (p);
         mpz_t res;
         mpz_init(res);
 
         //go ahead and do all of the divisions
-        prime_divide(SI, power_storage, size_SI, size_FB, init1, step, &counter, i, block_size);
-        prime_divide(SI, power_storage, size_SI, size_FB, init2, step, &counter, i, block_size);
+        if (init1 < size_SI + 1){
+          prime_divide(SI, power_storage, size_SI, size_FB, init1, step, &counter, i, block_size);
+        } else{
+          prime_divide(SI, power_storage, size_SI, size_FB, init2, step, &counter, i, block_size);
+        }
 
         //cout << "count:" << counter << endl;
         }
@@ -413,7 +419,7 @@ void prime_divide(polynomial_element* SI, int** power_storage, int size_SI, int 
 
 unsigned long prime_find_min(int size_SI, mpz_t a, mpz_t p, mpz_t min, mpz_t T, mpz_t r,
    mpz_t idx, int base_index, int block_size, int rank){
-     unsigned long temp;
+     unsigned long temp = size_SI+1;
 
   for (unsigned long j = base_index; j < base_index + block_size; j++){
       //for each prime, figure out the smallest polynomial expressed as (a+pk)^2 - N
@@ -431,11 +437,11 @@ unsigned long prime_find_min(int size_SI, mpz_t a, mpz_t p, mpz_t min, mpz_t T, 
         //char str_min[1024];
         //mpz_get_str(str_min, 10, min);
         //cout << "For rank: " << rank << "we find: " << str_min << endl;
+        temp = mpz_get_ui (min);
         break;
       }
     }
     //cout << "Returning prime: " << min << "with rank " << rank << endl;
-    temp = mpz_get_ui (min);
     //cout << "Returning: " << temp << endl;
     return temp;
 }
