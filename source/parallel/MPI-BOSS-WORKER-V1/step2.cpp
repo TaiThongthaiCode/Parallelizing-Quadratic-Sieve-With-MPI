@@ -43,8 +43,8 @@ int main(int argc, char *argv[]){
 
     //current size of sieving interval
     //int pes = 386*size*size -23209.3*size + 2352768;
-    int pes = 80000;
-    block_size = 80000/(10*num_proc);
+    int pes = 20;
+    block_size = 20/(10*(num_proc-1));
     polynomial_element * SI = generate_sieving_interval(N, pes);
     polynomial_element * SISAVE = generate_sieving_interval(N, pes);
 
@@ -315,6 +315,7 @@ void sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, polynomial
 
 
     block_base = (rank-1)*block_size;
+    cout << block_size << endl;
 
     while (continue_sieving == 1){
 
@@ -336,11 +337,11 @@ void sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, polynomial
         //find smallest indices such that the polynomial evaluation at that index is divisble by p
         unsigned long init1 = prime_find_min(size_SI, a, p, min1, T, r, idx, block_base, block_size, rank);
 
-        //cout << "We find init1: " << init1 << endl;
-
         unsigned long init2 = prime_find_min(size_SI, b, p, min2, T, r, idx, block_base, block_size, rank);
 
-        //cout << "We find init1: " << init1 << " and init2: " << init2 << endl;
+        if (rank == 1){
+          cout << "We find init1: " << init1 << " and init2: " << init2 << "for prime " << p << endl;
+        }
 
         //prepare for for loop
         int step = mpz_get_ui (p);
