@@ -127,6 +127,7 @@ int main(int argc, char *argv[]){
     // }
     // fb.close();
 
+    MPI_Finalize();
     return 0;
 }
 
@@ -215,6 +216,13 @@ void sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, polynomial
   mpz_t Tsq, res;
   mpz_init(Tsq);
   mpz_init(res);
+  mpz_init(a);
+  mpz_init(b);co
+  mpz_init(p);
+  mpz_init(idx);
+  mpz_init(r);
+  mpz_init(min1);
+  mpz_init(min2);
   mpz_init_set_ui(T, 1);
   mpz_root(T, N, 2); // T = sqrt(N)
   mpz_add_ui(T, T, 1); //Buffer T by one to ensure non negativity
@@ -326,12 +334,14 @@ void sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, polynomial
 
         cout << "Before finding minimum primes" << endl;
         //find smallest indices such that the polynomial evaluation at that index is divisble by p
-        int init1 = prime_find_min(size_SI, a, p, min1, T, r, idx, block_base, block_size, rank);
-        cout << "Here right with rank: " << rank << endl;
-        MPI_Barrier(MPI_COMM_WORLD);
-        int init2 = prime_find_min(size_SI, b, p, min2, T, r, idx, block_base, block_size, rank);
+        unsigned long init1 = prime_find_min(size_SI, a, p, min1, T, r, idx, block_base, block_size, rank);
 
-        cout << "We are here..." << endl;
+        cout << "We find init1: " << init1 << endl;
+
+        unsigned long init2 = prime_find_min(size_SI, b, p, min2, T, r, idx, block_base, block_size, rank);
+
+        cout << "We find init1: " << init1 << " and init2: " << init2 << endl;
+
         //prepare for for loop
         int step = mpz_get_ui (p);
         mpz_t res;
@@ -400,22 +410,31 @@ void prime_divide(polynomial_element* SI, int** power_storage, int size_SI, int 
 }
 
 
-int prime_find_min(int size_SI, mpz_t a, mpz_t p, mpz_t min, mpz_t T, mpz_t r, mpz_t idx, int base_index, int block_size, int rank){
-  for (int j = base_index; j < base_index + block_size; j++){
+unsigned long prime_find_min(int size_SI, mpz_t a, mpz_t p, mpz_t min, mpz_t T, mpz_t r,
+   mpz_t idx, int base_index, int block_size, int rank){
+     unsigned long temp;
+
+  for (unsigned long j = base_index; j < base_index + block_size; j++){
       //for each prime, figure out the smallest polynomial expressed as (a+pk)^2 - N
       mpz_set_ui(idx, j);
       mpz_add(idx, idx, T);
       mpz_sub(idx, idx, a);
+      //cout << "Rank: " << rank << "starting with" << j << endl;
 
       //check if i congruent to a - T mod p
-      cout << "Running through"<< endl;
       mpz_mod(r, idx, p);
-      int q = mpz_cmp_ui(r, 0);
+      int q = mpz_cmp_ui(r, (unsigned long) 0);
       if (q == 0){
+        cout << "Rank: " << rank << "Our value of j is: " << j << endl;
         mpz_set_ui(min, j);
+        //char str_min[1024];
+        //mpz_get_str(str_min, 10, min);
+        //cout << "For rank: " << rank << "we find: " << str_min << endl;
         break;
       }
     }
-    cout << "Returning prime" << endl;
-    return mpz_get_ui (min);
+    //cout << "Returning prime: " << min << "with rank " << rank << endl;
+    temp = mpz_get_ui (min);
+    cout << "Returning: " << temp << endl;
+    return temp;
 }
