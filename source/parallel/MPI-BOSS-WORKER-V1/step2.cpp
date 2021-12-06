@@ -217,7 +217,7 @@ void sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, polynomial
   mpz_init(Tsq);
   mpz_init(res);
   mpz_init(a);
-  mpz_init(b);co
+  mpz_init(b);
   mpz_init(p);
   mpz_init(idx);
   mpz_init(r);
@@ -332,15 +332,15 @@ void sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, polynomial
         mpz_init_set_ui(a, FB[i].a);
         mpz_init_set_ui(b, FB[i].b);
 
-        cout << "Before finding minimum primes" << endl;
+        //cout << "Before finding minimum primes" << endl;
         //find smallest indices such that the polynomial evaluation at that index is divisble by p
         unsigned long init1 = prime_find_min(size_SI, a, p, min1, T, r, idx, block_base, block_size, rank);
 
-        cout << "We find init1: " << init1 << endl;
+        //cout << "We find init1: " << init1 << endl;
 
         unsigned long init2 = prime_find_min(size_SI, b, p, min2, T, r, idx, block_base, block_size, rank);
 
-        cout << "We find init1: " << init1 << " and init2: " << init2 << endl;
+        //cout << "We find init1: " << init1 << " and init2: " << init2 << endl;
 
         //prepare for for loop
         int step = mpz_get_ui (p);
@@ -351,10 +351,10 @@ void sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, polynomial
         prime_divide(SI, power_storage, size_SI, size_FB, init1, step, &counter, i, block_size);
         prime_divide(SI, power_storage, size_SI, size_FB, init2, step, &counter, i, block_size);
 
-        cout << "count:" << counter << endl;
+        //cout << "count:" << counter << endl;
         }
 
-        cout << "We are here!" << endl;
+        cout << "We are here!" << rank << endl;
         int size = (size_FB + 1) * block_size;
         MPI_Send(&power_storage[0][0], size, MPI_INT, 0, 0, MPI_COMM_WORLD);
         MPI_Recv(&continue_sieving, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, &status);
@@ -425,7 +425,7 @@ unsigned long prime_find_min(int size_SI, mpz_t a, mpz_t p, mpz_t min, mpz_t T, 
       mpz_mod(r, idx, p);
       int q = mpz_cmp_ui(r, (unsigned long) 0);
       if (q == 0){
-        cout << "Rank: " << rank << "Our value of j is: " << j << endl;
+        //cout << "Rank: " << rank << "Our value of j is: " << j << endl;
         mpz_set_ui(min, j);
         //char str_min[1024];
         //mpz_get_str(str_min, 10, min);
@@ -435,6 +435,6 @@ unsigned long prime_find_min(int size_SI, mpz_t a, mpz_t p, mpz_t min, mpz_t T, 
     }
     //cout << "Returning prime: " << min << "with rank " << rank << endl;
     temp = mpz_get_ui (min);
-    cout << "Returning: " << temp << endl;
+    //cout << "Returning: " << temp << endl;
     return temp;
 }
