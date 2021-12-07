@@ -383,34 +383,34 @@ void sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, polynomial
         string* smooth_nums = new string[relations_amt];
         int** relations = alloc_2d_int(relations_amt, size_FB);
 
-        ofstream reduced_relations;
-        reduced_relations.open("reduce_relations.txt");
+        // ofstream reduced_relations;
+        // reduced_relations.open("reduce_relations.txt");
 
-        ofstream smooth_nums_test;
-        smooth_nums_test.open("smooth_nums_test.txt");
+        // ofstream smooth_nums_test;
+        // smooth_nums_test.open("smooth_nums_test.txt");
 
-        reduce_and_transpose(smooth_nums, relations, power_storage, block_size, size_FB, SI, block_base);
+        reduce_and_transpose(smooth_nums, relations, power_storage, block_size, size_FB, SI_SAVE, block_base);
+        //
+        // for (int i = 0; i < relations_amt; i++){
+        //   for (int j = 0; j < size_FB; j++){
+        //     cout << relations[i][j];
+        //   }
+        //   cout << endl;
+        // }
 
-        for (int i = 0; i < relations_amt; i++){
-          for (int j = 0; j < size_FB; j++){
-            reduced_relations << relations[i][j];
-          }
-          reduced_relations << endl;
-        }
-
-        for (int f= 0; f < relations_amt; f++){
-          smooth_nums_test << smooth_nums[f] << endl;
-        }
-
-        smooth_nums_test.close();
-        reduced_relations.close();
+        // for (int f= 0; f < relations_amt; f++){
+        //   cout << smooth_nums[f] << endl;
+        // }
+        //
+        // smooth_nums_test.close();
+        // // reduced_relations.close();
 
 
         int size = (size_FB + 1) * block_size;
-        int ret = MPI_Send(&power_storage[0][0], size, MPI_INT, 0, 0, MPI_COMM_WORLD);
-        cout << "Return val: " << ret << endl;
-        cout << "Sent something" << endl;
-        MPI_Recv(&continue_sieving, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, &status);
+        //int ret = MPI_Send(&power_storage[0][0], size, MPI_INT, 0, 0, MPI_COMM_WORLD);
+        //cout << "Return val: " << ret << endl;
+      //  cout << "Sent something" << endl;
+        //MPI_Recv(&continue_sieving, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, &status);
         block_base = block_base + num_proc * block_size;
       }
     }
@@ -480,16 +480,19 @@ unsigned long prime_find_min(int size_SI, mpz_t a, mpz_t p, mpz_t min, mpz_t T, 
 }
 
 void reduce_and_transpose(string* smooth_nums, int** relations, int** power_storage, int block_size, int size_FB, polynomial_element *SI, int block_base){
+  cout << "Reducing and transposing" << endl;
 
   int s_idx = 0;
   for (int j = 0; j < block_size; j++){
     if (power_storage[size_FB][j] == 1){
-      string tmp = mpz_get_str(NULL, 10, SI[block_base + j].poly);
+      //cout << "In this loop" << endl;
+      char tmp[1024];
+      mpz_get_str(tmp, 10, SI[j+block_base].poly);
       smooth_nums[s_idx] = tmp;
       for (int idx = 0; idx < size_FB; idx++){
         relations[s_idx][idx] = power_storage[idx][j];
       }
+      s_idx++;
     }
-    s_idx++;
   }
 }
