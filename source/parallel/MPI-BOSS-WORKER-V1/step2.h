@@ -33,6 +33,6 @@ int **alloc_2d_int(int rows, int cols);
 void prime_divide(polynomial_element* SI, int** power_storage, int size_SI, int size_FB, int smallest, int prime, int* counter, int i, int block_size, int block_base);
 unsigned long prime_find_min(int size_SI, mpz_t a, mpz_t p, mpz_t min, mpz_t T, mpz_t r, mpz_t idx, int base_index, int block_size, int rank);
 
-void reduce_and_transpose(string* smooth_nums, int** relations, int** power_storage, int block_size, int size_FB, polynomial_element *SI, int block_base);
+void reduce_and_transpose(int* smooth_nums, int** relations, int** power_storage, int block_size, int size_FB, polynomial_element *SI, int block_base);
 
 //void solve_matrix();

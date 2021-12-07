@@ -250,6 +250,7 @@ void sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, polynomial
       int location = status.MPI_SOURCE;
 
       int** relations_storage;
+      int* smooth_nums_storage = new int[new_relations];
       relations_storage = alloc_2d_int(new_relations, size_FB);
       size = new_relations * size_FB;
       MPI_Recv(&relations_storage[0][0], size, MPI_INT, location, 0, MPI_COMM_WORLD, &status);
@@ -260,9 +261,20 @@ void sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, polynomial
         }
         expo_matrix_file << endl;
       }
-    }
 
-    expo_matrix_file.close();
+      expo_matrix_file.close();
+
+      MPI_Recv(&smooth_nums_storage[0], new_relations, MPI_INT, location, 0, MPI_COMM_WORLD, &status);
+
+
+      for (int j = 0; j < new_relations; j++){
+        char* temp;
+        mpz_get_str(temp, 10, SI_SAVE[smooth_nums_storage[j]].poly);
+        smooth_num_file << temp << endl;
+      }
+
+      smooth_num_file.close();
+    }
 
 
 
@@ -409,7 +421,7 @@ void sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, polynomial
 
         cout <<  "Rank" << rank << " has " << relations_amt << endl;
 
-        string* smooth_nums = new string[relations_amt];
+        int* smooth_nums = new int[relations_amt];
         int** relations = alloc_2d_int(relations_amt, size_FB);
 
         // ofstream reduced_relations;
@@ -439,13 +451,14 @@ void sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, polynomial
         int size = (size_FB) * relations_amt;
         int ret = MPI_Send(&relations_amt, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
         ret = MPI_Send(&relations[0][0], size, MPI_INT, 0, 0, MPI_COMM_WORLD);
+        ret = MPI_Send(&smooth_nums[0], relations_amt, MPI_INT, 0, 0, MPI_COMM_WORLD);
         //cout << "Return val: " << ret << endl;
       //  cout << "Sent something" << endl;
         //MPI_Recv(&continue_sieving, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, &status);
         block_base = block_base + num_proc * block_size;
+        MPI_Barrier(MPI_COMM_WORLD);
       }
     }
-    MPI_Barrier(MPI_COMM_WORLD);
 
   }
 
@@ -511,14 +524,12 @@ unsigned long prime_find_min(int size_SI, mpz_t a, mpz_t p, mpz_t min, mpz_t T, 
     return temp;
 }
 
-void reduce_and_transpose(string* smooth_nums, int** relations, int** power_storage, int block_size, int size_FB, polynomial_element *SI, int block_base){
+void reduce_and_transpose(int* smooth_nums, int** relations, int** power_storage, int block_size, int size_FB, polynomial_element *SI, int block_base){
 
   int s_idx = 0;
   for (int j = 0; j < block_size; j++){
     if (power_storage[size_FB][j] == 1){
-      char tmp[1024];
-      mpz_get_str(tmp, 10, SI[j+block_base].poly);
-      smooth_nums[s_idx] = tmp;
+      smooth_nums[s_idx] = j+block_base;
       for (int idx = 0; idx < size_FB; idx++){
         relations[s_idx][idx] = power_storage[idx][j];
       }
