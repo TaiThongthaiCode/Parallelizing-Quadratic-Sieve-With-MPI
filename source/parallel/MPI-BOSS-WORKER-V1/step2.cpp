@@ -238,9 +238,12 @@ void sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, polynomial
       cout << "MERRY CHRIST" << endl;
 
       string temp;
-      for (int j = 0; j < new_relations; j++){
-         temp = mpz_get_str(NULL, 10, SI_SAVE[smooth_nums_storage[j]].poly);
-        smooth_num_file << temp << endl;
+      if (location == 2){
+        cout << "DOING SHIT FOR LOCATION 2"  << endl;
+        for (int j = 0; j < new_relations; j++){
+           temp = mpz_get_str(NULL, 10, SI_SAVE[smooth_nums_storage[j]].poly);
+          smooth_num_file << temp << endl;
+        }
       }
 
 
