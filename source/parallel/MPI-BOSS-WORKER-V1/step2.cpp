@@ -254,7 +254,16 @@ void sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, polynomial
     size = new_relations * size_FB;
     MPI_Recv(&relations_storage[0][0], size, MPI_INT, location, 0, MPI_COMM_WORLD, &status);
 
-    cout << "The goods has been received" << endl;
+    for (int i = 0; i < new_relations; i++){
+      for (int j = 0; j < size_FB; j++){
+        expo_matrix_file << relations_storage[i][j];
+      }
+      expo_matrix_file << endl;
+    }
+
+    cout << "Wrote in some real shit" << endl;
+
+    expo_matrix_file.close();
 
 
 
