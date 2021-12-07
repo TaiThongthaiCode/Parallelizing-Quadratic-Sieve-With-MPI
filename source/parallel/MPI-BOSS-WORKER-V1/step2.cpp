@@ -177,8 +177,12 @@ void sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, polynomial
   mpz_root(T, N, 2); // T = sqrt(N)
   mpz_add_ui(T, T, 1); //Buffer T by one to ensure non negativity
 
+  //MASTER VARS
   int** power_storage;
   power_storage = alloc_2d_int(size_FB + 1, block_size);
+  int need_more = 1;
+
+  //WORKER VARS
 
   if (rank == 0){
     int total_counter = 0;
@@ -195,15 +199,26 @@ void sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, polynomial
 
 
     while (total_counter < size_FB + 10){
-      int need_more = 1;
+
+
+      // STEP 1 REC
+
       MPI_Recv(&new_relations, 1, MPI_INT, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, &status);
+      total_counter += new_relations;
+
+      cout << "NEW RELATIONS MASTER SIDE: " << new_relations << endl;
+
+
       int location = status.MPI_SOURCE;
 
-      int** relations_storage;
       int* smooth_nums_storage = new int[new_relations];
+      int** relations_storage;
       relations_storage = alloc_2d_int(new_relations, size_FB);
+
       size = new_relations * size_FB;
+      // STEP 2
       MPI_Recv(&relations_storage[0][0], size, MPI_INT, location, 0, MPI_COMM_WORLD, &status);
+
 
       for (int i = 0; i < new_relations; i++){
         for (int j = 0; j < size_FB; j++){
@@ -217,26 +232,30 @@ void sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, polynomial
         bit_matrix_file << endl;
       }
 
-
+      //STEP 3 bug
       MPI_Recv(&smooth_nums_storage[0], new_relations, MPI_INT, location, 0, MPI_COMM_WORLD, &status);
 
+      cout << "MERRY CHRIST" << endl;
 
+      string temp;
       for (int j = 0; j < new_relations; j++){
-        char* temp;
-        mpz_get_str(temp, 10, SI_SAVE[smooth_nums_storage[j]].poly);
+         temp = mpz_get_str(NULL, 10, SI_SAVE[smooth_nums_storage[j]].poly);
         smooth_num_file << temp << endl;
       }
 
-      if (total_counter <= size_FB + 10){
+
+
+      if (total_counter >= size_FB + 10){
         need_more = 0;
         cout << "Boss here?" << endl;
       }
 
       MPI_Send(&need_more, 1, MPI_INT, location, 0, MPI_COMM_WORLD);
+      free(smooth_nums_storage);
 
     }
-    expo_matrix_file.close();
     smooth_num_file.close();
+    expo_matrix_file.close();
 
 
  } else{
@@ -244,25 +263,24 @@ void sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, polynomial
     block_base = (rank-1)*block_size;
     cout << "Rank:" << rank << "has block base " << block_base << endl;
 
+    ofstream prime_divide_result;
+    prime_divide_result.open("Prime_Divide.txt");
+
+
+
     while (continue_sieving == 1){
-
-
-      //initialize matrix which stores max power of a prime which divides any given polynomial evaluation
-      int** power_storage;
-      power_storage = alloc_2d_int(size_FB + 1, block_size);
 
       // counting number of relations
       int counter = 0;
 
-      ofstream prime_divide_result;
-      prime_divide_result.open("Prime_Divide.txt");
+
 
       for (int i = 0; i < size_FB; i++){
 
         //convert p, a, b to mpz types
-        mpz_init_set_ui(p, FB[i].p);
-        mpz_init_set_ui(a, FB[i].a);
-        mpz_init_set_ui(b, FB[i].b);
+        mpz_set_ui(p, FB[i].p);
+        mpz_set_ui(a, FB[i].a);
+        mpz_set_ui(b, FB[i].b);
 
         //cout << "Before finding minimum primes" << endl;
         //find smallest indices such that the polynomial evaluation at that index is divisble by p
@@ -288,7 +306,6 @@ void sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, polynomial
           }
 
         }
-        prime_divide_result.close();
 
         int relations_amt = 0;
         for (int j = 0; j < block_size; j++){
@@ -296,23 +313,44 @@ void sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, polynomial
             relations_amt += 1;
           }
         }
-
         int* smooth_nums = new int[relations_amt];
         int** relations = alloc_2d_int(relations_amt, size_FB);
+
 
         reduce_and_transpose(smooth_nums, relations, power_storage, block_size, size_FB, SI_SAVE, block_base);
 
         int size = (size_FB) * relations_amt;
+
+        cout << "NEW RELATIONS WORKER SIDE: "  << relations_amt << endl;
+
+        //STEP 1 SEND
         int ret = MPI_Send(&relations_amt, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
+
+        //STEP2
         ret = MPI_Send(&relations[0][0], size, MPI_INT, 0, 0, MPI_COMM_WORLD);
+
+        //STEP3 BUG
         ret = MPI_Send(&smooth_nums[0], relations_amt, MPI_INT, 0, 0, MPI_COMM_WORLD);
+        cout << "We find ret:"  << ret << endl;
         //cout << "Return val: " << ret << endl;
       //  cout << "Sent something" << endl;
         MPI_Recv(&continue_sieving, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, &status);
+
         block_base = block_base + (num_proc - 1) * block_size;
         cout << "New block base: " << block_base << endl;
+
+
+
+        free(smooth_nums);
+        delete [] relations[0];  // remove the pool
+        delete [] relations;     // remove the pointers
+
+        cout <<  "We have" << continue_sieving << endl;
+
       }
       //cout << "Worker here" << endl;
+      prime_divide_result.close();
+
     }
 
   }
