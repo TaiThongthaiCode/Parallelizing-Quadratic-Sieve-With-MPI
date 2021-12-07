@@ -247,6 +247,17 @@ void sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, polynomial
     int total_counter = 0;
     int new_relations = 0;
     MPI_Recv(&new_relations, 1, MPI_INT, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, &status);
+    int location = status.MPI_SOURCE;
+
+    int** relations_storage;
+    relations_storage = alloc_2d_int(new_relations, size_FB);
+    size = new_relations * size_FB;
+    MPI_Recv(&relations_storage, size, MPI_INT, location, 0, MPI_COMM_WORLD, &status);
+
+    cout << "The goods has been received" << endl;
+
+
+
    //  while (total_counter < size_FB + 10){
    //    MPI_Recv(&new_relations, 1, MPI_INT, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, &status);
    //    int location = status.MPI_SOURCE;
@@ -406,8 +417,9 @@ void sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, polynomial
         // // reduced_relations.close();
 
 
-        int size = (size_FB + 1) * block_size;
-        //int ret = MPI_Send(&power_storage[0][0], size, MPI_INT, 0, 0, MPI_COMM_WORLD);
+        int size = (size_FB) * relations_amt;
+        int ret = MPI_Send(&relations_amt, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
+        ret = MPI_Send(&relations[0][0], size, MPI_INT, 0, 0, MPI_COMM_WORLD);
         //cout << "Return val: " << ret << endl;
       //  cout << "Sent something" << endl;
         //MPI_Recv(&continue_sieving, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, &status);
@@ -415,6 +427,7 @@ void sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, polynomial
       }
     }
     MPI_Barrier(MPI_COMM_WORLD);
+    cout << "YEH KYA HAIN" << endl;
     //return power_storage;
   }
 
