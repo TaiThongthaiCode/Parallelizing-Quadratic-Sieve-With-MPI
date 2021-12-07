@@ -252,7 +252,7 @@ void sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, polynomial
     int** relations_storage;
     relations_storage = alloc_2d_int(new_relations, size_FB);
     size = new_relations * size_FB;
-    MPI_Recv(&relations_storage, size, MPI_INT, location, 0, MPI_COMM_WORLD, &status);
+    MPI_Recv(&relations_storage[0][0], size, MPI_INT, location, 0, MPI_COMM_WORLD, &status);
 
     cout << "The goods has been received" << endl;
 
