@@ -260,10 +260,11 @@ void sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, polynomial
       }
       expo_matrix_file << endl;
     }
-
-    cout << "Wrote in some real shit" << endl;
-
     expo_matrix_file.close();
+
+    string* poly_storage = new string[new_relations];
+
+
 
 
 
