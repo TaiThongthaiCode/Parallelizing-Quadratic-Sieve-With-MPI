@@ -36,7 +36,7 @@ int main(int argc, char *argv[]){
     //Set value of N
     mpz_t N;
     mpz_init(N);
-    mpz_set_str(N, "103603", 10);
+    mpz_set_str(N, "1673212627", 10);
 
     size_t j = mpz_sizeinbase (N, 10);
     int size = static_cast<int>(j);
@@ -178,6 +178,7 @@ void sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, polynomial
   int** power_storage;
   power_storage = alloc_2d_int(size_FB + 1, block_size);
   int need_more = 1;
+  int dead_processes = 0;
 
   //WORKER VARS
 
@@ -195,7 +196,7 @@ void sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, polynomial
     bit_matrix_file.open("Bit_Matrix.txt");
 
 
-    while (total_counter <  80000000){
+    while (dead_processes < num_proc - 1){
 
 
       // STEP 1 REC
@@ -216,28 +217,32 @@ void sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, polynomial
       // STEP 2
       MPI_Recv(&relations_storage[0][0], size, MPI_INT, location, 0, MPI_COMM_WORLD, &status);
 
-      cout << "Writing in" << endl;
+      if (need_more == 1){
+        cout << "Writing in" << endl;
 
-      for (int i = 0; i < new_relations; i++){
-        for (int j = 0; j < size_FB; j++){
-          expo_matrix_file << relations_storage[i][j];
-          bit_val = relations_storage[i][j] % 2;
-          bit_matrix_file << bit_val;
+        for (int i = 0; i < new_relations; i++){
+          for (int j = 0; j < size_FB; j++){
+            expo_matrix_file << relations_storage[i][j];
+            bit_val = relations_storage[i][j] % 2;
+            bit_matrix_file << bit_val;
 
 
+          }
+          expo_matrix_file << endl;
+          bit_matrix_file << endl;
         }
-        expo_matrix_file << endl;
-        bit_matrix_file << endl;
       }
 
       //STEP 3 bug
       MPI_Recv(&smooth_nums_storage[0], new_relations, MPI_INT, location, 0, MPI_COMM_WORLD, &status);
 
 
-      string temp;
-      for (int j = 0; j < new_relations; j++){
-         temp = mpz_get_str(NULL, 10, SI_SAVE[smooth_nums_storage[j]].poly);
-         smooth_num_file << temp << endl;
+      if (need_more == 1){
+        string temp;
+        for (int j = 0; j < new_relations; j++){
+           temp = mpz_get_str(NULL, 10, SI_SAVE[smooth_nums_storage[j]].poly);
+           smooth_num_file << temp << endl;
+        }
       }
 
 
@@ -248,6 +253,11 @@ void sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, polynomial
 
       MPI_Send(&need_more, 1, MPI_INT, location, 0, MPI_COMM_WORLD);
       free(smooth_nums_storage);
+      if (need_more == 0){
+        cout << "Killed a process" << endl;
+        dead_processes += 1;
+        cout << "Killed a process: " << dead_processes << endl;
+      }
 
     }
     smooth_num_file.close();
