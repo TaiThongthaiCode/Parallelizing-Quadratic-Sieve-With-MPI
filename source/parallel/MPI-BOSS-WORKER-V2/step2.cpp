@@ -180,12 +180,11 @@ void sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, polynomial
   int need_more = 1;
   int received_processes = 0;
   int relations_amt = 0;
-  int max_relations = (5/4)*(size_FB + 10)/(num_proc - 1) + 1;
+  int tot_relations = 0;
+  int max_relations = (size_FB + 10)/(num_proc - 1) + 1;
 
-  //WORKER VARS
 
   if (rank == 0){
-    int total_counter = 0;
     int new_relations = 0;
 
     ofstream smooth_num_file;
@@ -205,7 +204,7 @@ void sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, polynomial
 
       int* smooth_nums_storage = new int[new_relations];
       int **relations_storage;
-      relations_storage = alloc_2d_int(new_relations, size FB);
+      relations_storage = alloc_2d_int(new_relations, size_FB);
 
       size = new_relations * size_FB;
       MPI_Recv(&relations_storage[0][0], size, MPI_INT, location, 0, MPI_COMM_WORLD, &status);
@@ -214,7 +213,7 @@ void sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, polynomial
         for (int j = 0; j < size_FB; j++){
           expo_matrix_file << relations_storage[i][j];
           bit_val = relations_storage[i][j] % 2;
-          bit_matrix_file < bit_val;
+          bit_matrix_file << bit_val;
         }
         expo_matrix_file << endl;
         bit_matrix_file << endl;
@@ -223,6 +222,7 @@ void sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, polynomial
       MPI_Recv(&smooth_nums_storage, new_relations, MPI_INT, location, 0, MPI_COMM_WORLD, &status);
       received_processes += 1;
 
+      string temp;
       for (int j = 0; j < new_relations; j++){
             temp = mpz_get_str(NULL, 10, SI_SAVE[smooth_nums_storage[j]].poly);
             smooth_num_file << temp << endl;
@@ -234,31 +234,41 @@ void sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, polynomial
 
 
  } else{
+   block_base = (rank - 1)*block_size;
+   while (tot_relations < max_relations){
+     int counter = 0;
 
-   while (relations_amt < max_relations){
-     block_base = (rank - 1)*block_size;
+     cout << "Rank: " << rank << " has block base " << block_base << endl;
+
 
      for (int i = 0; i < size_FB; i++){
        mpz_set_ui(p, FB[i].p);
        mpz_set_ui(a, FB[i].a);
        mpz_set_ui(b, FB[i].b);
+
+       unsigned long init1 = prime_find_min(size_SI, a, p, min1, T, r, idx, block_base, block_size, rank);
+
+       unsigned long init2 = prime_find_min(size_SI, b, p, min2, T, r, idx, block_base, block_size, rank);
+
+       int step = mpz_get_ui (p);
+       mpz_t res;
+       mpz_init(res);
+
+       if (init1 < size_SI + 1){
+           prime_divide(SI, power_storage, size_SI, size_FB, init1, step, &counter, i, block_size, block_base);
+       }
+
+       if (init2 < size_SI + 1){
+         prime_divide(SI, power_storage, size_SI, size_FB, init2, step, &counter, i, block_size, block_base);
+       }
+
+       if (counter >= max_relations){
+         break;
+       }
      }
 
-      unsigned long init1 = prime_find_min(size_SI, a, p, min1, T, r, idx, block_base, block_size, rank);
+     cout << counter << endl;
 
-      unsigned long init2 = prime_find_min(size_SI, b, p, min2, T, r, idx, block_base, block_size, rank);
-
-      int step = mpz_get_ui (p);
-      mpz_t res;
-      mpz_init(res);
-
-      if (init1 < size_SI + 1){
-          prime_divide(SI, power_storage, size_SI, size_FB, init1, step, &counter, i, block_size, block_base);
-      }
-
-      if (init2 < size_SI + 1){
-        prime_divide(SI, power_storage, size_SI, size_FB, init2, step, &counter, i, block_size, block_base);
-      }
 
       int relations_amt = 0;
       for (int j = 0; j < block_size; j++){
@@ -267,12 +277,15 @@ void sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, polynomial
           }
       }
 
+      tot_relations += relations_amt;
+
       int* smooth_nums = new int[relations_amt];
       int** relations = alloc_2d_int(relations_amt, size_FB);
 
       reduce_and_transpose(smooth_nums, relations, power_storage, block_size, size_FB, SI_SAVE, block_base);
 
       block_base = block_base + (num_proc - 1) * block_size;
+
 
    }
     //
