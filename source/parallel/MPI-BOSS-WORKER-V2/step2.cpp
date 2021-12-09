@@ -51,15 +51,25 @@ int main(int argc, char *argv[]){
     int relation_count = 0;
 
     //grab size of factor base from file
-    int fbs;
+    int fbs = 0;
     string line;
+
     ifstream myfile ("fb_size.txt");
     if (myfile.is_open()){
       getline(myfile, line);
       char str_array[line.length()];
       strcpy(str_array, line.c_str());
       fbs = atoi(str_array);
+    } else {
+      cout << "FB text file problem" << endl;
     }
+
+
+    //  else{
+    //   printf("File could not be opened \n");
+    //   exit(0);
+    // }
+
 
     //fill in factor base
     prime_element * FB = load(N, fbs);
@@ -185,6 +195,8 @@ void sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, polynomial
   int leftover;
   int bound;
 
+  cout << "Inside this function" << endl;
+
 
   if (rank == 0){
     int new_relations = 0;
@@ -223,7 +235,9 @@ void sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, polynomial
         bit_matrix_file << endl;
       }
 
-      MPI_Recv(&smooth_nums_storage, new_relations, MPI_INT, location, 0, MPI_COMM_WORLD, &status);
+      cout <<
+
+      MPI_Recv(&smooth_nums_storage[0], new_relations, MPI_INT, location, 0, MPI_COMM_WORLD, &status);
       received_processes += 1;
 
       cout << new_relations << " is amount" << endl;
