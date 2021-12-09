@@ -25,7 +25,7 @@ int main(int argc, char *argv[]){
     //Setting some value of N = pq for prime p and prime q.
     mpz_t N;
     mpz_init(N);
-    mpz_set_str(N, "6049382716049382715444444444445222222222222222222083950617283950617290000000000000000000000000852339271604938271519704344444554030922222222222202740181728395061729247403", 10);
+    mpz_set_str(N, "18567078082619935259", 10);
 
     //calculate number of digits
     size_t j = mpz_sizeinbase (N, 10);

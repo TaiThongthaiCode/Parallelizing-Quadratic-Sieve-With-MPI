@@ -29,14 +29,14 @@ int main(int argc, char *argv[]){
     //Set value of N
     mpz_t N;
     mpz_init(N);
-    mpz_set_str(N, "10141516181932272496105647768491411342341", 10);
+    mpz_set_str(N, "18567078082619935259", 10);
 
     size_t j = mpz_sizeinbase (N, 10);
     int size = static_cast<int>(j);
 
     //current size of sieving interval
     //int pes = 386*size*size -23209.3*size + 2352768;
-    int pes = 80000;
+    int pes = 800000;
     polynomial_element * SI = generate_sieving_interval(N, pes);
     polynomial_element * SISAVE = generate_sieving_interval(N, pes);
 

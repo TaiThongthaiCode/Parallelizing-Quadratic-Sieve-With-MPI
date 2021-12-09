@@ -235,8 +235,6 @@ void sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, polynomial
         bit_matrix_file << endl;
       }
 
-      cout <<
-
       MPI_Recv(&smooth_nums_storage[0], new_relations, MPI_INT, location, 0, MPI_COMM_WORLD, &status);
       received_processes += 1;
 
