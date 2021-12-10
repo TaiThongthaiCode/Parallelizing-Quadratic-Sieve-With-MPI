@@ -25,14 +25,14 @@ struct polynomial_element {
 
 
 prime_element * load(mpz_t N, int fbs);
-polynomial_element * generate_sieving_interval(mpz_t N, int pes);
+polynomial_element * generate_sieving_interval(mpz_t N, int pes, mpz_t T);
 void sieve(polynomial_element * SI, prime_element * FB);
-void sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, polynomial_element *SI_SAVE, int fbs, int pes, int rank, MPI_Status status, int block_size, int num_proc);
+void sieving_step(prime_element *FB, mpz_t N, int fbs, int rank, MPI_Status status, int block_size, int num_proc);
 int **alloc_2d_int(int rows, int cols);
 
-void prime_divide(polynomial_element* SI, int** power_storage, int size_SI, int size_FB, int smallest, int prime, int* counter, int i, int block_size, int block_base);
-unsigned long prime_find_min(int size_SI, mpz_t a, mpz_t p, mpz_t min, mpz_t T, mpz_t r, mpz_t idx, int base_index, int block_size, int rank);
+void prime_divide(polynomial_element* SI, int** power_storage, int block_size, int size_FB, int smallest, int prime, int* counter, int i);
+unsigned long prime_find_min(int block_size, mpz_t a, mpz_t p, mpz_t min, mpz_t T, mpz_t r, mpz_t idx, int rank);
 
-void reduce_and_transpose(int* smooth_nums, int** relations, int** power_storage, int block_size, int size_FB, polynomial_element *SI, int block_base);
+void reduce_and_transpose( int** relations, int** power_storage, int block_size, int size_FB);
 
 //void solve_matrix();
