@@ -216,7 +216,7 @@ void sieving_step(prime_element *FB, mpz_t N, int fbs, int pes){
       prime_divide(SI, power_storage, size_SSI, size_FB, init1, step, &counter, i);
       prime_divide(SI, power_storage, size_SSI, size_FB, init2, step, &counter, i);
 
-      // cout << "count:" << counter << endl;
+      cout << "count:" << counter << endl;
 
 
       // //if there are enough relations, it is time to return
