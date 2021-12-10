@@ -271,8 +271,14 @@ void sieving_step(prime_element *FB, mpz_t N, int fbs, int rank, MPI_Status stat
    mpz_set(T_hold, T);
 
     while (continue_sieving == 1){
-
+      string* smooth_nums;
+      int** relations;
       int** power_storage = new int*[size_FB+1];
+      string packed_smooth_nums;
+      int* packed_length;
+      *packed_length = 0;
+
+
       for (int i = 0; i < size_FB+1; i++){
         power_storage[i] = new int[block_size];
         for (int j = 0; j< block_size; j++){
@@ -303,11 +309,6 @@ void sieving_step(prime_element *FB, mpz_t N, int fbs, int rank, MPI_Status stat
           unsigned long init2 = prime_find_min(block_size, b, p, min2, T, r, idx, rank);
 
 
-
-          // cout << "We find init1: "  << init1 << " and init2: " << init2 << "for the prime " << p << "and value " << temp << endl;
-
-
-
           //prepare for for loop
           int step = mpz_get_ui (p);
           mpz_t res;
@@ -331,8 +332,14 @@ void sieving_step(prime_element *FB, mpz_t N, int fbs, int rank, MPI_Status stat
         }
 
 
-        int** relations = alloc_2d_int(relations_amt, size_FB);
-        reduce_and_transpose(relations, power_storage, block_size, size_FB);
+        relations = alloc_2d_int(relations_amt, size_FB);
+        smooth_nums = new string[relations_amt];
+
+        reduce_and_transpose(smooth_nums, relations, power_storage, block_size, size_FB, SI_SAVE);
+
+        for (int i = 0; i < relations_amt; i++){
+          cout << smooth_nums[i] << endl;
+        }
 
 
         //STEP 1 SEND
@@ -344,13 +351,19 @@ void sieving_step(prime_element *FB, mpz_t N, int fbs, int rank, MPI_Status stat
         int size = (size_FB) * relations_amt;
         ret = MPI_Send(&relations[0][0], size, MPI_INT, 0, 0, MPI_COMM_WORLD);
 
-
+        //STEP3 SENDING SMOOTH NUMS
+        packed_smooth_nums = pack(packed_length, smooth_nums, relations_amt);
+        cout << *packed_length << endl;
+        cout << packed_smooth_nums << endl;
 
         for (int i = 0; i < size_FB + 1; i++){
           delete[] power_storage[i];
         }
         delete[] power_storage;
 
+        delete packed_length;
+
+        delete[] smooth_nums;
         delete [] relations[0];  // remove the pool
         delete [] relations;     // remove the pointers
 
@@ -429,15 +442,32 @@ unsigned long prime_find_min(int block_size, mpz_t a, mpz_t p, mpz_t min, mpz_t 
     return temp;
 }
 
-void reduce_and_transpose(int** relations, int** power_storage, int block_size, int size_FB){
+void reduce_and_transpose(string* smooth_nums, int** relations, int** power_storage, int block_size, int size_FB, polynomial_element* SI){
+  string temp;
 
   int s_idx = 0;
   for (int j = 0; j < block_size; j++){
     if (power_storage[size_FB][j] == 1){
+      temp = mpz_get_str(NULL, 10, SI[j].poly);
+      smooth_nums[s_idx] = temp;
       for (int idx = 0; idx < size_FB; idx++){
         relations[s_idx][idx] = power_storage[idx][j];
       }
       s_idx++;
     }
   }
+}
+
+string pack(int* string_length, string* smooth_nums, int relations_amt){
+
+  string packed_smooth_nums = "";
+  cout << "pak like anderson" << endl;
+  for (int i = 0; i < 5; i++){
+    //packed_smooth_nums = packed_smooth_nums + smooth_nums[i] + "|";
+    cout << smooth_nums[i].length() << endl;
+    //*string_length = *string_length + smooth_nums[i].length() + 1;
+  }
+
+  return packed_smooth_nums;
+
 }
