@@ -275,9 +275,7 @@ void sieving_step(prime_element *FB, mpz_t N, int fbs, int rank, MPI_Status stat
       int** relations;
       int** power_storage = new int*[size_FB+1];
       string packed_smooth_nums;
-      int* packed_length;
-      *packed_length = 0;
-
+      int* packed_length = new int;
 
       for (int i = 0; i < size_FB+1; i++){
         power_storage[i] = new int[block_size];
@@ -335,7 +333,9 @@ void sieving_step(prime_element *FB, mpz_t N, int fbs, int rank, MPI_Status stat
         relations = alloc_2d_int(relations_amt, size_FB);
         smooth_nums = new string[relations_amt];
 
+        
         reduce_and_transpose(smooth_nums, relations, power_storage, block_size, size_FB, SI_SAVE);
+
 
         for (int i = 0; i < relations_amt; i++){
           cout << smooth_nums[i] << endl;
@@ -353,14 +353,15 @@ void sieving_step(prime_element *FB, mpz_t N, int fbs, int rank, MPI_Status stat
 
         //STEP3 SENDING SMOOTH NUMS
         packed_smooth_nums = pack(packed_length, smooth_nums, relations_amt);
-        cout << *packed_length << endl;
-        cout << packed_smooth_nums << endl;
+        cout << "PACKED LENGTH: "<< *packed_length << endl;
+        cout << "SMOOTH PACKED: " << packed_smooth_nums << endl;
 
         for (int i = 0; i < size_FB + 1; i++){
           delete[] power_storage[i];
         }
         delete[] power_storage;
 
+        // delete packed_length;
         delete packed_length;
 
         delete[] smooth_nums;
@@ -460,12 +461,13 @@ void reduce_and_transpose(string* smooth_nums, int** relations, int** power_stor
 
 string pack(int* string_length, string* smooth_nums, int relations_amt){
 
+  *string_length = 0;
   string packed_smooth_nums = "";
   cout << "pak like anderson" << endl;
   for (int i = 0; i < 5; i++){
-    //packed_smooth_nums = packed_smooth_nums + smooth_nums[i] + "|";
-    cout << smooth_nums[i].length() << endl;
-    //*string_length = *string_length + smooth_nums[i].length() + 1;
+    packed_smooth_nums = packed_smooth_nums + smooth_nums[i] + "|";
+    cout << "length" << smooth_nums[i].length() << endl;
+    *string_length = *string_length + smooth_nums[i].length() + 1;
   }
 
   return packed_smooth_nums;
