@@ -44,3 +44,4 @@ clean:
 	rm -f *.txt
 	rm -f $(MAINPROG)
 	rm -f $(SIEVEPROG)
+	rm -f $(GAUSSPROG)

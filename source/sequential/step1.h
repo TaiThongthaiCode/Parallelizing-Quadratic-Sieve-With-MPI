@@ -17,7 +17,7 @@ using namespace std;
 #pragma once
 
 struct prime_element {
-    int p, a, b;
+    unsigned long int p, a, b;
 };
 
 int getprimes(int l, mpz_t N, prime_element * primes, int fbs);

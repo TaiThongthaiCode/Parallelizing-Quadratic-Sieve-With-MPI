@@ -28,7 +28,8 @@ polynomial_element * generate_sieving_interval(mpz_t N, int size_SSI, mpz_t T);
 void sieve(polynomial_element * SI, prime_element * FB);
 void sieving_step(prime_element *FB, mpz_t N, int fbs, int pes);
 
-void prime_divide(polynomial_element* SI, int** power_storage, int size_SI,  int size_FB, int smallest, int prime, int* counter, int i);
-int prime_find_min(int size_SI, mpz_t a, mpz_t p, mpz_t min, mpz_t T, mpz_t r, mpz_t idx);
-
-void solve_matrix();
+void prime_divide(polynomial_element* SI, int** power_storage, int* counter, int size_SI,  int size_FB, int smallest, int prime, int i);
+int prime_find_min(int size_SI, mpz_t a, mpz_t p, mpz_t min, mpz_t T);
+void write_to_file(ofstream& smooth_num_store, ofstream& power_matrix_store, 
+    ofstream& bit_matrix_store, int size_SSI, int size_FB, 
+    int** power_storage, polynomial_element* SI_SAVE);
