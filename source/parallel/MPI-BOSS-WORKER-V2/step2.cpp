@@ -36,17 +36,14 @@ int main(int argc, char *argv[]){
     //Set value of N
     mpz_t N;
     mpz_init(N);
-    mpz_set_str(N, "1673212627", 10);
+    mpz_set_str(N, "18567078082619935259", 10);
 
     size_t j = mpz_sizeinbase (N, 10);
     int size = static_cast<int>(j);
 
     //current size of sieving interval
     //int pes = 386*size*size -23209.3*size + 2352768;
-    int pes = 80000;
-    block_size = 80000/(10*(num_proc-1));
-    polynomial_element * SI = generate_sieving_interval(N, pes);
-    polynomial_element * SISAVE = generate_sieving_interval(N, pes);
+    block_size = 200;
 
     int relation_count = 0;
 
@@ -80,7 +77,7 @@ int main(int argc, char *argv[]){
     // }
 
     //Write complete columns as rows into a text file
-    sieving_step(SI, FB, N, SISAVE, fbs, pes, rank, status, block_size, num_proc);
+    sieving_step(FB, N, fbs, rank, status, block_size, num_proc);
 
     MPI_Finalize();
     return 0;
@@ -127,18 +124,15 @@ prime_element * load(mpz_t N, int fbs){
 }
 
 //create the sieving iterval of size 80, 000
-polynomial_element * generate_sieving_interval(mpz_t N, int pes){
+polynomial_element * generate_sieving_interval(mpz_t N, int block_size, mpz_t T){
 
-    int size = pes;
+    int size = block_size;
     polynomial_element * SI = new polynomial_element[size];
 
     //Find smallest value of T such that T^2 - N >= 0
-    mpz_t T, Tsq, res;
+    mpz_t Tsq, res;
     mpz_init(Tsq);
     mpz_init(res);
-    mpz_init_set_ui(T, 1);
-    mpz_root(T, N, 2); // T = sqrt(N)
-    mpz_add_ui(T, T, 1); //Buffer T by one to ensure non negativity
 
     //Evaluate for 80,000 values and add to array.
     for (int i = 0; i < size; i++){
@@ -156,22 +150,21 @@ polynomial_element * generate_sieving_interval(mpz_t N, int pes){
 
 
 //step where we repeatedly divide until we have the required number of relations
-void sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, polynomial_element *SI_SAVE, int fbs, int pes, int rank, MPI_Status status, int block_size, int num_proc){
+void sieving_step(prime_element *FB, mpz_t N, int fbs, int rank, MPI_Status status, int block_size, int num_proc){
 
   //intialize values and recompute value for T
-  mpz_t T, p, a, b, idx, r, min1, min2, poly;
+  mpz_t T, T_hold, p, a, b, idx, r, min1, min2, poly;
   int size_FB = fbs;
-  int size_SI = pes;
   int power;
   int size;
   int continue_sieving = 1;
-  int block_base;
   int bit_val;
 
   //Find smallest value of T such that T^2 - N >= 0
   mpz_t Tsq, res;
   mpz_init(Tsq);
   mpz_init(res);
+  mpz_init(T_hold);
   mpz_init(a);
   mpz_init(b);
   mpz_init(p);
@@ -183,15 +176,17 @@ void sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, polynomial
   mpz_init_set_ui(T, 1);
   mpz_root(T, N, 2); // T = sqrt(N)
   mpz_add_ui(T, T, 1); //Buffer T by one to ensure non negativity
+  mpz_set(T_hold, T);
+
 
   //MASTER VARS
   int** power_storage;
   power_storage = alloc_2d_int(size_FB + 1, block_size);
-  int need_more = 1;
   int received_processes = 0;
   int relations_amt = 0;
   int tot_relations = 0;
   int max_relations = (size_FB + 10)/(num_proc - 1) + 1;
+  cout << "We find that max_relaitons has value " << max_relations << endl;
   int leftover;
   int bound;
 
@@ -235,22 +230,22 @@ void sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, polynomial
         bit_matrix_file << endl;
       }
 
-      MPI_Recv(&smooth_nums_storage[0], new_relations, MPI_INT, location, 0, MPI_COMM_WORLD, &status);
+      // MPI_Recv(&smooth_nums_storage[0], new_relations, MPI_INT, location, 0, MPI_COMM_WORLD, &status);
       received_processes += 1;
 
       cout << new_relations << " is amount" << endl;
 
 
       string temp;
-      for (int k = 0; k < new_relations; k++){
-            // temp = mpz_get_str(NULL, 10, SI_SAVE[smooth_nums_storage[j]].poly);
-            // smooth_num_file << temp << endl;
-            smooth_num_file << smooth_nums_storage[k] << endl;
-      }
+      // for (int k = 0; k < new_relations; k++){
+      //       // temp = mpz_get_str(NULL, 10, SI_SAVE[smooth_nums_storage[j]].poly);
+      //       // smooth_num_file << temp << endl;
+      //       smooth_num_file << smooth_nums_storage[k] << endl;
+      // }
 
       cout << "GOT HERE" << endl;
 
-      free(smooth_nums_storage);
+      // free(smooth_nums_storage);
       delete [] relations_storage[0];
       delete [] relations_storage;
 
@@ -264,14 +259,29 @@ void sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, polynomial
 
 
  } else{
+
+
    int* all_smooth = new int[max_relations];
    int** all_relations;
    all_relations = alloc_2d_int(max_relations, size_FB);
-   block_base = (rank - 1)*block_size;
-   while (tot_relations < max_relations && block_base < size_SI){
-     int counter = 0;
+   int block_offset = (rank - 1)*block_size;
+   mpz_add_ui(T, T, block_offset);
+   mpz_set(T_hold, T);
 
-     cout << "Rank: " << rank << " has block base " << block_base << endl;
+
+  int counter = 0;
+
+   while (tot_relations < max_relations){
+
+     string temp;
+     temp = mpz_get_str(NULL, 10, T_hold);
+     cout << "For rank: " << rank << "we find " << temp << endl;
+
+
+     polynomial_element * SI = generate_sieving_interval(N, block_size, T);
+     mpz_set(T, T_hold);
+     polynomial_element * SISAVE = generate_sieving_interval(N, block_size, T);
+     mpz_set(T, T_hold);
 
 
      for (int i = 0; i < size_FB; i++){
@@ -279,20 +289,20 @@ void sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, polynomial
        mpz_set_ui(a, FB[i].a);
        mpz_set_ui(b, FB[i].b);
 
-       unsigned long init1 = prime_find_min(size_SI, a, p, min1, T, r, idx, block_base, block_size, rank);
+       unsigned long init1 = prime_find_min(block_size, a, p, min1, T, r, idx, rank);
 
-       unsigned long init2 = prime_find_min(size_SI, b, p, min2, T, r, idx, block_base, block_size, rank);
+       unsigned long init2 = prime_find_min(block_size, b, p, min2, T, r, idx, rank);
 
        int step = mpz_get_ui (p);
        mpz_t res;
        mpz_init(res);
 
-       if (init1 < size_SI + 1){
-           prime_divide(SI, power_storage, size_SI, size_FB, init1, step, &counter, i, block_size, block_base);
+       if (init1 < block_size + 1){
+           prime_divide(SI, power_storage, block_size, size_FB, init1, step, &counter, i);
        }
 
-       if (init2 < size_SI + 1){
-         prime_divide(SI, power_storage, size_SI, size_FB, init2, step, &counter, i, block_size, block_base);
+       if (init2 < block_size + 1){
+         prime_divide(SI, power_storage, block_size, size_FB, init2, step, &counter, i);
        }
 
        if (counter >= max_relations){
@@ -303,7 +313,6 @@ void sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, polynomial
      // cout << counter << endl;
      // cout << max_relations << endl;
 
-
       int relations_amt = 0;
       for (int j = 0; j < block_size; j++){
         if (power_storage[size_FB][j] == 1){
@@ -311,39 +320,41 @@ void sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, polynomial
           }
       }
 
-      int* smooth_nums = new int[relations_amt];
+
+      //int* smooth_nums = new int[relations_amt];
       int** relations = alloc_2d_int(relations_amt, size_FB);
 
-      reduce_and_transpose(smooth_nums, relations, power_storage, block_size, size_FB, SI_SAVE, block_base);
+      reduce_and_transpose(relations, power_storage, block_size, size_FB, SISAVE);
 
       leftover = max_relations - tot_relations;
+
+
       bound = min(relations_amt, leftover);
 
+
       for (int i = 0; i < bound; i++){
-        all_smooth[tot_relations + i] = smooth_nums[i];
         for (int j = 0; j < size_FB; j++){
           all_relations[tot_relations + i][j] = relations[i][j];
         }
       }
 
-      tot_relations += leftover;
+      tot_relations += bound;
 
-      block_base = block_base + (num_proc - 1) * block_size;
+      cout << "Our total number of relations is " << tot_relations <<  " for rank"  << rank << endl;
 
-      cout << tot_relations << endl;
-      cout << max_relations << endl;
+
+      int offset = block_size * (num_proc - 1);
+      mpz_add_ui(T, T, offset);
+      mpz_set(T_hold, T);
    }
-
-
-
 
    int size = tot_relations * size_FB;
    int ret  = MPI_Send(&tot_relations, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
    cout << "Send one success" << endl;
    ret = MPI_Send(&all_relations[0][0],size, MPI_INT, 0, 0, MPI_COMM_WORLD);
    cout << "Send two success" << endl;
-   ret = MPI_Send(&all_smooth[0], tot_relations, MPI_INT, 0, 0, MPI_COMM_WORLD);
-   cout << "Send three success" << endl;
+   // ret = MPI_Send(&all_smooth[0], tot_relations, MPI_INT, 0, 0, MPI_COMM_WORLD);
+   // cout << "Send three success" << endl;
   }
 
 }
@@ -357,12 +368,12 @@ int **alloc_2d_int(int rows, int cols) {
 }
 
 //divide all the numbers by the prime when applicable
-void prime_divide(polynomial_element* SI, int** power_storage, int size_SI, int size_FB, int smallest, int prime, int* counter, int i, int block_size, int block_base){
+void prime_divide(polynomial_element* SI, int** power_storage, int block_size, int size_FB, int smallest, int prime, int* counter, int i){
     int power = 0;
     int step = prime;
 
     //iterate through all numbers which will be divisble by prime
-    for (int j = smallest; j < block_base + block_size; j = j + step){
+    for (int j = smallest; j < block_size; j = j + step){
 
       //keep dividing until 1
       int q = mpz_cmp_ui(SI[j].poly, 1);
@@ -375,24 +386,24 @@ void prime_divide(polynomial_element* SI, int** power_storage, int size_SI, int 
           q = mpz_divisible_ui_p(SI[j].poly, step);
         }
         //store the power
-        power_storage[i][j - block_base] += power;
+        power_storage[i][j] += power;
 
         q = mpz_cmp_ui(SI[j].poly, 1);
         if (q == 0){
           *counter += 1; //iterate counter if it has now been reduced to 1
-          power_storage[size_FB][j - block_base] = 1;
+          power_storage[size_FB][j] = 1;
         }
       }
     }
 }
 
 
-unsigned long prime_find_min(int size_SI, mpz_t a, mpz_t p, mpz_t min, mpz_t T, mpz_t r,
-   mpz_t idx, int base_index, int block_size, int rank){
-     unsigned long temp = size_SI+1;
+unsigned long prime_find_min(int block_size, mpz_t a, mpz_t p, mpz_t min, mpz_t T, mpz_t r,
+   mpz_t idx, int rank){
+     unsigned long temp = block_size +1;
 
 
-  for (unsigned long j = base_index; j < base_index + block_size; j++){
+  for (unsigned long j = 0; j < block_size; j++){
       //for each prime, figure out the smallest polynomial expressed as (a+pk)^2 - N
       mpz_set_ui(idx, j);
       mpz_add(idx, idx, T);
@@ -410,12 +421,11 @@ unsigned long prime_find_min(int size_SI, mpz_t a, mpz_t p, mpz_t min, mpz_t T, 
     return temp;
 }
 
-void reduce_and_transpose(int* smooth_nums, int** relations, int** power_storage, int block_size, int size_FB, polynomial_element *SI, int block_base){
+void reduce_and_transpose(int** relations, int** power_storage, int block_size, int size_FB, polynomial_element *SI){
 
   int s_idx = 0;
   for (int j = 0; j < block_size; j++){
     if (power_storage[size_FB][j] == 1){
-      smooth_nums[s_idx] = j+block_base;
       for (int idx = 0; idx < size_FB; idx++){
         relations[s_idx][idx] = power_storage[idx][j];
       }
