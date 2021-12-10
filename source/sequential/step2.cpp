@@ -29,16 +29,16 @@ int main(int argc, char *argv[]){
     //Set value of N
     mpz_t N;
     mpz_init(N);
-    mpz_set_str(N, "18567078082619935259", 10);
+    mpz_set_str(N, "98587", 10);
 
     size_t j = mpz_sizeinbase (N, 10);
     int size = static_cast<int>(j);
 
     //current size of sieving interval
     //int pes = 386*size*size -23209.3*size + 2352768;
-    int pes = 800000;
-    polynomial_element * SI = generate_sieving_interval(N, pes);
-    polynomial_element * SISAVE = generate_sieving_interval(N, pes);
+    int pes = 8000;
+    //polynomial_element * SI = generate_sieving_interval(N, pes);
+    //polynomial_element * SISAVE = generate_sieving_interval(N, pes);
 
     int relation_count = 0;
 
@@ -63,62 +63,62 @@ int main(int argc, char *argv[]){
 
 
     //Write complete columns as rows into a text file
-    int** relations = sieving_step(SI, FB, N, fbs, pes);
+    sieving_step(FB, N, fbs, pes);
 
-    //count number of relations to create array of polynomials which have been factorized
-    for (int i = 0; i < pes; i++){
-      if (relations[fbs][i] == 1){
-        relation_count += 1;
-      }
-    }
-    cout << relation_count << endl;
-    cout << "PES: " << pes << endl;
-    polynomial_element * SISUB = new polynomial_element[relation_count];
-
-    //initialize exponent matrix
-    int count = 0;
-
-
-    //Fill out the  polynomial array
-    int sieve_number = 0;
-    for (int i = 0; i < pes; i++){
-      if (relations[fbs][i] == 1){
-        mpz_set(SISUB[count].poly, SISAVE[i].poly);
-        count += 1;
-      }
-    }
-
-    ofstream fb;
-    fb.open ("Smooth_Num.txt");
-    for (int i = 0; i < count; i++){
-      fb << mpz_get_str(NULL, 10, SISUB[i].poly) << endl;
-    }
-    fb.close();
-
-    fb.open ("Power_Matrix.txt");
-    for (int i = 0; i < pes; i++){
-        if (relations[fbs][i] == 1){
-          for (int j = 0; j < fbs; j++){
-            fb << relations[j][i];
-          }
-          fb << endl;
-        }
-    }
-    fb.close();
-
-    fb.open ("Expo_Matrix.txt");
-    for (int i = 0; i < pes; i++){
-        if (relations[fbs][i] == 1){
-          for (int j = 0; j < fbs; j++){
-            relations[j][i] = relations[j][i] % 2;
-            fb << relations[j][i];
-          }
-          fb << endl;
-        }
-    }
-    fb.close();
-
-    solve_matrix();
+    // //count number of relations to create array of polynomials which have been factorized
+    // for (int i = 0; i < pes; i++){
+    //   if (relations[fbs][i] == 1){
+    //     relation_count += 1;
+    //   }
+    // }
+    // cout << relation_count << endl;
+    // cout << "PES: " << pes << endl;
+    // polynomial_element * SISUB = new polynomial_element[relation_count];
+    //
+    // //initialize exponent matrix
+    // int count = 0;
+    //
+    //
+    // //Fill out the  polynomial array
+    // int sieve_number = 0;
+    // for (int i = 0; i < pes; i++){
+    //   if (relations[fbs][i] == 1){
+    //     mpz_set(SISUB[count].poly, SISAVE[i].poly);
+    //     count += 1;
+    //   }
+    // }
+    //
+    // ofstream fb;
+    // fb.open ("Smooth_Num.txt");
+    // for (int i = 0; i < count; i++){
+    //   fb << mpz_get_str(NULL, 10, SISUB[i].poly) << endl;
+    // }
+    // fb.close();
+    //
+    // fb.open ("Power_Matrix.txt");
+    // for (int i = 0; i < pes; i++){
+    //     if (relations[fbs][i] == 1){
+    //       for (int j = 0; j < fbs; j++){
+    //         fb << relations[j][i];
+    //       }
+    //       fb << endl;
+    //     }
+    // }
+    // fb.close();
+    //
+    // fb.open ("Expo_Matrix.txt");
+    // for (int i = 0; i < pes; i++){
+    //     if (relations[fbs][i] == 1){
+    //       for (int j = 0; j < fbs; j++){
+    //         relations[j][i] = relations[j][i] % 2;
+    //         fb << relations[j][i];
+    //       }
+    //       fb << endl;
+    //     }
+    // }
+    // fb.close();
+    //
+    // solve_matrix();
 
     return 0;
 }
@@ -164,21 +164,18 @@ prime_element * load(mpz_t N, int fbs){
 }
 
 //create the sieving iterval of size 80, 000
-polynomial_element * generate_sieving_interval(mpz_t N, int pes){
+polynomial_element * generate_sieving_interval(mpz_t N, int size_SSI, mpz_t T){
 
-    int size = pes;
+    int size = size_SSI;
     polynomial_element * SI = new polynomial_element[size];
 
-    //Find smallest value of T such that T^2 - N >= 0
-    mpz_t T, Tsq, res;
+    mpz_t Tsq, res;
     mpz_init(Tsq);
     mpz_init(res);
-    mpz_init_set_ui(T, 1);
-    mpz_root(T, N, 2); // T = sqrt(N)
-    mpz_add_ui(T, T, 1); //Buffer T by one to ensure non negativity
+
 
     //Evaluate for 80,000 values and add to array.
-    for (int i = 0; i < size; i++){
+    for (int i = 0; i < size_SSI; i++){
         //res = T^2 - N
         mpz_pow_ui(Tsq, T, 2);
         mpz_sub(res, Tsq, N);
@@ -193,68 +190,128 @@ polynomial_element * generate_sieving_interval(mpz_t N, int pes){
 
 
 //step where we repeatedly divide until we have the required number of relations
-int** sieving_step(polynomial_element *SI, prime_element *FB, mpz_t N, int fbs, int pes){
+void sieving_step(prime_element *FB, mpz_t N, int fbs, int pes){
 
   //intialize values and recompute value for T
-  mpz_t T, p, a, b, idx, r, min1, min2;
+  mpz_t T, T_hold, p, a, b, idx, r, min1, min2;
   int size_FB = fbs;
   int size_SI = pes;
+  int size_SSI = pes/40;
   int power;
 
   mpz_init(idx);
   mpz_init(r);
   mpz_init(min1);
   mpz_init(min2);
+  mpz_init(T_hold);
   mpz_init_set_ui(T, 1);
   mpz_root(T, N, 2); // T = sqrt(N)
   mpz_add_ui(T, T, 1); //Buffer T by one to ensure non
+  mpz_set(T_hold, T);
+  string temp;
+  temp = mpz_get_str(NULL, 10, T);
+  cout << "The value of T is " <<  temp << endl;
 
-  //initialize matrix which stores max power of a prime which divides any given polynomial evaluation
-  int** power_storage = new int*[size_FB+1];
-  for (int i = 0; i < size_FB+1; i++){
-    power_storage[i] = new int[size_SI];
-    for (int j = 0; j< size_SI; j++){
-      power_storage[i][j] = 0;
-    }
-  }
-
-  // counting number of relations
   int counter = 0;
 
-  for (int i = 0; i < size_FB; i++){
-    //convert p, a, b to mpz types
-    mpz_init_set_ui(p, FB[i].p);
-    mpz_init_set_ui(a, FB[i].a);
-    mpz_init_set_ui(b, FB[i].b);
 
-    //find smallest indices such that the polynomial evaluation at that index is divisble by p
-    int init1 = prime_find_min(size_SI, a, p, min1, T, r, idx);
-    int init2 = prime_find_min(size_SI, b, p, min2, T, r, idx);
+  ofstream smooth_num_store;
+  smooth_num_store.open ("Smooth_Num.txt");
 
-    //prepare for for loop
-    int step = mpz_get_ui (p);
-    mpz_t res;
-    mpz_init(res);
+  ofstream power_matrix_store;
+  power_matrix_store.open("Power_Matrix.txt");
 
-    //go ahead and do all of the divisions
-    prime_divide(SI, power_storage, size_SI, size_FB, init1, step, &counter, i);
-    prime_divide(SI, power_storage, size_SI, size_FB, init2, step, &counter, i);
-
-    cout << "count:" << counter << endl;
+  ofstream bit_matrix_store;
+  bit_matrix_store.open("Bit_Matrix.txt");
 
 
-    // //if there are enough relations, it is time to return
-    if (counter >= size_FB + 10){
-      cout << "We are here!" << endl;
-      return power_storage;
+  while (counter < size_FB + 10){
+    //initialize matrix which stores max power of a prime which divides any given polynomial evaluation
+    int** power_storage = new int*[size_FB+1];
+    for (int i = 0; i < size_FB+1; i++){
+      power_storage[i] = new int[size_SSI];
+      for (int j = 0; j< size_SSI; j++){
+        power_storage[i][j] = 0;
+      }
     }
+
+    // counting number of relation
+
+    polynomial_element * SI = generate_sieving_interval(N, size_SSI, T);
+    mpz_set(T, T_hold);
+    polynomial_element * SI_SAVE = generate_sieving_interval(N, size_SSI, T);
+    mpz_set(T, T_hold);
+
+
+    for (int i = 0; i < size_FB; i++){
+      //convert p, a, b to mpz types
+      mpz_init_set_ui(p, FB[i].p);
+      mpz_init_set_ui(a, FB[i].a);
+      mpz_init_set_ui(b, FB[i].b);
+
+      //find smallest indices such that the polynomial evaluation at that index is divisble by p
+
+
+      int init1 = prime_find_min(size_SI, a, p, min1, T_hold, r, idx);
+      int init2 = prime_find_min(size_SI, b, p, min2, T_hold, r, idx);
+      string temp;
+      temp = mpz_get_str(NULL, 10, T_hold);
+
+      // cout << "We find init1: "  << init1 << " and init2: " << init2 << "for the prime " << p << "and value " << temp << endl;
+
+      //prepare for for loop
+      int step = mpz_get_ui (p);
+      mpz_t res;
+      mpz_init(res);
+
+      //go ahead and do all of the divisions
+      prime_divide(SI, power_storage, size_SSI, size_FB, init1, step, &counter, i);
+      prime_divide(SI, power_storage, size_SSI, size_FB, init2, step, &counter, i);
+
+      cout << "count:" << counter << endl;
+
+
+      // //if there are enough relations, it is time to return
+      if (counter >= size_FB + 10){
+        cout << "We are here!" << endl;
+        break;
+        //return power_storage;
+      }
+    }
+
+    for (int j = 0; j < size_SSI; j++){
+      if (power_storage[size_FB][j] == 1){
+        temp = mpz_get_str(NULL, 10, SI_SAVE[j].poly);
+        smooth_num_store << temp << endl;
+        for (int i = 0; i < size_FB; i++){
+          power_matrix_store << power_storage[i][j];
+          int val = power_storage[i][j];
+          val = power_storage[i][j] % 2;
+          bit_matrix_store << val;
+        }
+        power_matrix_store << endl;
+        bit_matrix_store << endl;
+      }
+    }
+
+
+
+
+
+
+    delete SI;
+    delete SI_SAVE;
+
+    mpz_add_ui(T, T, size_SSI);
+    mpz_set(T_hold, T);
+
   }
 
   if (counter < size_FB + 1){
     cout << "Not enough relations found" << endl;
     exit(0);
   }
-  return power_storage;
+  //return power_storage;
 
 
 }
