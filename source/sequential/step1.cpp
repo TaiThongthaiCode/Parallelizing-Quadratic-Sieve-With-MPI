@@ -25,7 +25,7 @@ int main(int argc, char *argv[]){
     //Setting some value of N = pq for prime p and prime q.
     mpz_t N;
     mpz_init(N);
-    mpz_set_str(N, "98587", 10);
+    mpz_set_str(N, "10141516181932272496105647768491411342341", 10);
 
     //calculate number of digits
     size_t j = mpz_sizeinbase (N, 10);
@@ -33,8 +33,8 @@ int main(int argc, char *argv[]){
 
     //Size of Factorbase to be allocated depending on the number of digits
     int fbs, l;
-    fbs = 100;
-    //fbs = 2.93*(size*size) - 1.64*size  + 2455;
+    //fbs = 100;
+    fbs = 2.93*(size*size) - 1.64*size  + 2455;
     // if (size < 10) {
     //   fbs = 150;
     // } else if (size < 50) {

@@ -29,14 +29,14 @@ int main(int argc, char *argv[]){
     //Set value of N
     mpz_t N;
     mpz_init(N);
-    mpz_set_str(N, "98587", 10);
+    mpz_set_str(N, "10141516181932272496105647768491411342341", 10);
 
     size_t j = mpz_sizeinbase (N, 10);
     int size = static_cast<int>(j);
 
     //current size of sieving interval
     //int pes = 386*size*size -23209.3*size + 2352768;
-    int pes = 8000;
+    int pes = 800000;
     //polynomial_element * SI = generate_sieving_interval(N, pes);
     //polynomial_element * SISAVE = generate_sieving_interval(N, pes);
 
@@ -64,61 +64,6 @@ int main(int argc, char *argv[]){
 
     //Write complete columns as rows into a text file
     sieving_step(FB, N, fbs, pes);
-
-    // //count number of relations to create array of polynomials which have been factorized
-    // for (int i = 0; i < pes; i++){
-    //   if (relations[fbs][i] == 1){
-    //     relation_count += 1;
-    //   }
-    // }
-    // cout << relation_count << endl;
-    // cout << "PES: " << pes << endl;
-    // polynomial_element * SISUB = new polynomial_element[relation_count];
-    //
-    // //initialize exponent matrix
-    // int count = 0;
-    //
-    //
-    // //Fill out the  polynomial array
-    // int sieve_number = 0;
-    // for (int i = 0; i < pes; i++){
-    //   if (relations[fbs][i] == 1){
-    //     mpz_set(SISUB[count].poly, SISAVE[i].poly);
-    //     count += 1;
-    //   }
-    // }
-    //
-    // ofstream fb;
-    // fb.open ("Smooth_Num.txt");
-    // for (int i = 0; i < count; i++){
-    //   fb << mpz_get_str(NULL, 10, SISUB[i].poly) << endl;
-    // }
-    // fb.close();
-    //
-    // fb.open ("Power_Matrix.txt");
-    // for (int i = 0; i < pes; i++){
-    //     if (relations[fbs][i] == 1){
-    //       for (int j = 0; j < fbs; j++){
-    //         fb << relations[j][i];
-    //       }
-    //       fb << endl;
-    //     }
-    // }
-    // fb.close();
-    //
-    // fb.open ("Expo_Matrix.txt");
-    // for (int i = 0; i < pes; i++){
-    //     if (relations[fbs][i] == 1){
-    //       for (int j = 0; j < fbs; j++){
-    //         relations[j][i] = relations[j][i] % 2;
-    //         fb << relations[j][i];
-    //       }
-    //       fb << endl;
-    //     }
-    // }
-    // fb.close();
-    //
-    // solve_matrix();
 
     return 0;
 }
@@ -196,7 +141,7 @@ void sieving_step(prime_element *FB, mpz_t N, int fbs, int pes){
   mpz_t T, T_hold, p, a, b, idx, r, min1, min2;
   int size_FB = fbs;
   int size_SI = pes;
-  int size_SSI = pes/40;
+  int size_SSI = 80000;
   int power;
 
   mpz_init(idx);
@@ -226,6 +171,9 @@ void sieving_step(prime_element *FB, mpz_t N, int fbs, int pes){
 
 
   while (counter < size_FB + 10){
+    cout << "Next iter" << endl;
+    temp = mpz_get_str(NULL, 10, T);
+    cout << "The value of T is " <<  temp << endl;
     //initialize matrix which stores max power of a prime which divides any given polynomial evaluation
     int** power_storage = new int*[size_FB+1];
     for (int i = 0; i < size_FB+1; i++){
@@ -268,7 +216,7 @@ void sieving_step(prime_element *FB, mpz_t N, int fbs, int pes){
       prime_divide(SI, power_storage, size_SSI, size_FB, init1, step, &counter, i);
       prime_divide(SI, power_storage, size_SSI, size_FB, init2, step, &counter, i);
 
-      cout << "count:" << counter << endl;
+      // cout << "count:" << counter << endl;
 
 
       // //if there are enough relations, it is time to return
@@ -296,14 +244,16 @@ void sieving_step(prime_element *FB, mpz_t N, int fbs, int pes){
 
 
 
-
-
-
     delete SI;
     delete SI_SAVE;
 
     mpz_add_ui(T, T, size_SSI);
     mpz_set(T_hold, T);
+
+    for (int i = 0; i < size_FB + 1; i++){
+      delete[] power_storage[i];
+    }
+    delete[] power_storage;
 
   }
 
@@ -341,6 +291,9 @@ void prime_divide(polynomial_element* SI, int** power_storage, int size_SI, int 
         if (q == 0){
           *counter += 1; //iterate counter if it has now been reduced to 1
           power_storage[size_FB][j] = 1;
+          if (*counter >= size_FB + 10){
+            return;
+          }
         }
       }
     }
