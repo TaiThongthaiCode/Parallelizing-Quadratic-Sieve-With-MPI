@@ -65,10 +65,10 @@ int main(int argc, char *argv[]){
 
 
 /*
-Description: load in the factor base elements and the corresponding values 
-            of a and b which correspond to the smallest values a and b such 
+Description: load in the factor base elements and the corresponding values
+            of a and b which correspond to the smallest values a and b such
             that a^2 - T is 0 mod p and b^2 - T is 0 mod p.
-Params: (1) mpz_t number N (product of two primes); 
+Params: (1) mpz_t number N (product of two primes);
         (2) integer factor base size (fbs)
 Return: A pointer to prime_element array. The struct prime_element holds ints,
         prime p, and their solutions a and b.
@@ -117,11 +117,11 @@ prime_element * load(mpz_t N, int fbs){
 
 
 /*
-Description: Generates our sieving interval given a size and starting bound. 
-Params: (1) mpz_t number N (product of two primes); 
+Description: Generates our sieving interval given a size and starting bound.
+Params: (1) mpz_t number N (product of two primes);
         (2) int size_SSI (interval size);
-        (3) mpz_t number T (interval starting bound starting bound). 
-Return: A pointer to the polynomial_element array. The polynomial_element 
+        (3) mpz_t number T (interval starting bound starting bound).
+Return: A pointer to the polynomial_element array. The polynomial_element
         struct holds an mpz_t type (we named "poly"). This is done
         due to weird memory constraints of mpz_t types
 */
@@ -148,7 +148,61 @@ polynomial_element * generate_sieving_interval(mpz_t N, int pes, mpz_t T){
     }
     return SI;
 }
-
+//
+// void master_unpack_save(int* total_counter, int size_FB, int* need_more, ofstream& expo_matrix_file, ofstream& bit_matrix_file, ofstream& smooth_num_file, int* dead_processes){
+//   int new_relations, location, size, bit_val packed_str_length;
+//   MPI_Status status;
+//   int** relations_storage;
+//   char* packed_smooth_nums_m;
+//
+//   // STEP 1 REC
+//   MPI_Recv(&new_relations, 1, MPI_INT, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, &status);
+//   *total_counter += new_relations;
+//   location = status.MPI_SOURCE;
+//   size = new_relations * size_FB;
+//
+//   //STEP 2 REC
+//   MPI_Recv(&relations_storage[0][0], size, MPI_INT, location, 0, MPI_COMM_WORLD, &status);
+//   if (int* need_more == 1){
+//     for (int i = 0; i < new_relations; i++){
+//       for (int j = 0; j < size_FB; j++){
+//         expo_matrix_file << relations_storage[i][j];
+//         bit_val = relations_storage[i][j] % 2;
+//         bit_matrix_file << bit_val;
+//       }
+//       expo_matrix_file << endl;
+//       bit_matrix_file << endl;
+//     }
+//   }
+//
+//   // STEP 3
+//   MPI_Recv(&packed_str_length, 1, MPI_INT, location, 0, MPI_COMM_WORLD, &status);
+//   packed_smooth_nums_m = new char[packed_str_length];
+//   MPI_Recv(&packed_smooth_nums_m[0], packed_str_length, MPI_CHAR, location, 0, MPI_COMM_WORLD, &status);
+//
+//   for (int i = 0; i < packed_str_length; i++){
+//     if (packed_smooth_nums_m[i] != '|' && packed_smooth_nums_m[i] != '\0') {
+//       smooth_num_file << packed_smooth_nums_m[i];
+//     } else if (packed_smooth_nums_m[i] == '|') {
+//       smooth_num_file << endl;
+//     }
+//   }
+//
+//   //set need more to zero, once enough relations exist
+//   if (*total_counter >= size_FB + 10){
+//     *need_more = 0;
+//   }
+//
+//
+//   MPI_Send(&need_more, 1, MPI_INT, location, 0, MPI_COMM_WORLD);
+//   if (*need_more == 0){
+//     dead_processes* += 1;
+//   }
+//
+//   delete [] packed_smooth_nums_m;
+//   delete [] relations_storage[0];
+//   delete [] relations_storage;
+// }
 
 //step where we repeatedly divide until we have the required number of relations
 void sieving_step(prime_element *FB, mpz_t N, int fbs, int rank, MPI_Status status, int block_size, int num_proc){
@@ -213,7 +267,7 @@ void sieving_step(prime_element *FB, mpz_t N, int fbs, int rank, MPI_Status stat
         }
       }
 
-      //set need more to zero, once enough relations exist 
+      //set need more to zero, once enough relations exist
       if (total_counter >= size_FB + 10){
         need_more = 0;
       }
