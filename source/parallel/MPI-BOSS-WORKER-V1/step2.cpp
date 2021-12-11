@@ -37,16 +37,7 @@ int main(int argc, char *argv[]){
     mpz_t N;
     mpz_init(N);
     mpz_set_str(N, "1333", 10);
-
-    size_t j = mpz_sizeinbase (N, 10);
-    int size = static_cast<int>(j);
-
-    //current size of sieving interval
-    // int pes = 386*size*size -23209.3*size + 2352768;
-
-
-    //polynomial_element * SI = ing_interval(N, pes);
-    //polynomial_element * SISAVE = ing_interval(N, pes);
+    prime_element * FB;
 
     int relation_count = 0;
 
@@ -62,36 +53,43 @@ int main(int argc, char *argv[]){
     }
 
     //fill in factor base
-    prime_element * FB = load(N, fbs);
+    FB = load(N, fbs);
 
-
-    // for (int i = 0; i < fbs; i++) {
-    //     // cout << FB[i].p << "-"<< FB[i].a << "-"<< FB[i].b << endl;
-    // }
-
-    //Write complete columns as rows into a text file
+    //Bosses and workers interact to obtain smooth numbers
+    //and factorizations
     sieving_step(FB, N, fbs, rank, status, block_size, num_proc);
 
     MPI_Finalize();
     return 0;
 }
 
-//load in the factor base elements and the corresponding values of a and b which correspond to the smallest values a and b such that a^2 - T is 0 mod p and b^2 - T is 0 mod p.
+
+/*
+Description: load in the factor base elements and the corresponding values 
+            of a and b which correspond to the smallest values a and b such 
+            that a^2 - T is 0 mod p and b^2 - T is 0 mod p.
+Params: (1) mpz_t number N (product of two primes); 
+        (2) integer factor base size (fbs)
+Return: A pointer to prime_element array. The struct prime_element holds ints,
+        prime p, and their solutions a and b.
+*/
 prime_element * load(mpz_t N, int fbs){
 
+    int idx, item;
+    char * number;
     prime_element * FB = (prime_element *)calloc(fbs, sizeof(prime_element));
 
     string line;
     ifstream myfile ("factorbase.txt");
     if (myfile.is_open()){
-        int idx = 0;
+        idx = 0;
         //go through each line and get the required data
         while ( getline (myfile,line) ){
           char str_array[line.length()];
           strcpy(str_array, line.c_str());
           //Use strtok to get one nuber at a time
-          char* number = strtok(str_array, " ");
-          int item = 0;
+          number = strtok(str_array, " ");
+          item = 0;
           while (number != NULL){
             if (item == 0){
                 FB[idx].p = atoi(number);
@@ -109,6 +107,7 @@ prime_element * load(mpz_t N, int fbs){
           idx++;
         }
         myfile.close();
+        delete [] number;
     }
 
     else cout << "Unable to open file";
@@ -116,7 +115,16 @@ prime_element * load(mpz_t N, int fbs){
     return FB;
 }
 
-//create the sieving iterval of size 80, 000
+
+/*
+Description: Generates our sieving interval given a size and starting bound. 
+Params: (1) mpz_t number N (product of two primes); 
+        (2) int size_SSI (interval size);
+        (3) mpz_t number T (interval starting bound starting bound). 
+Return: A pointer to the polynomial_element array. The polynomial_element 
+        struct holds an mpz_t type (we named "poly"). This is done
+        due to weird memory constraints of mpz_t types
+*/
 polynomial_element * generate_sieving_interval(mpz_t N, int pes, mpz_t T){
 
     int size = pes;
@@ -146,16 +154,11 @@ polynomial_element * generate_sieving_interval(mpz_t N, int pes, mpz_t T){
 void sieving_step(prime_element *FB, mpz_t N, int fbs, int rank, MPI_Status status, int block_size, int num_proc){
 
   //intialize values and recompute value for T
-  mpz_t T, T_hold, p, a, b, idx, r, min1, min2, poly;
+  mpz_t T, T_hold, p, a, b, idx, r, min1, min2, poly, Tsq, res;
   int size_FB = fbs;
-  int power;
-  int size;
   int continue_sieving = 1;
-  int block_base;
-  int bit_val;
+  int power, bit_val, size;
 
-  //Find smallest value of T such that T^2 - N >= 0
-  mpz_t Tsq, res;
   mpz_init(Tsq);
   mpz_init(res);
   mpz_init(T_hold);
@@ -167,21 +170,18 @@ void sieving_step(prime_element *FB, mpz_t N, int fbs, int rank, MPI_Status stat
   mpz_init(min1);
   mpz_init(min2);
   mpz_init(poly);
+
+  //Find smallest value of T such that T^2 - N >= 0
   mpz_init_set_ui(T, 1);
   mpz_root(T, N, 2); // T = sqrt(N)
   mpz_add_ui(T, T, 1); //Buffer T by one to ensure non negativity
   mpz_set(T_hold, T);
-
-  //MASTER VARS
-
-
-  //WORKER VARS
-  int need_more = 1;
-  int dead_processes = 0;
-
+ 
   if (rank == 0){
+    int need_more = 1;
+    int dead_processes = 0;
     int total_counter = 0;
-    int new_relations = 0;
+    int new_relations, packed_str_length, location;
 
     ofstream smooth_num_file;
     smooth_num_file.open ("Smooth_Num.txt");
@@ -192,98 +192,62 @@ void sieving_step(prime_element *FB, mpz_t N, int fbs, int rank, MPI_Status stat
     ofstream bit_matrix_file;
     bit_matrix_file.open("Bit_Matrix.txt");
 
-
     while (dead_processes < num_proc - 1){
+        char* packed_smooth_nums_m;
+        int** relations_storage;
 
 
       // STEP 1 REC
-
       MPI_Recv(&new_relations, 1, MPI_INT, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, &status);
       total_counter += new_relations;
-
-      cout << "NEW RELATIONS MASTER SIDE: " << new_relations << endl;
-
-
-      int location = status.MPI_SOURCE;
-
-      int* smooth_nums_storage = new int[new_relations];
-      int packed_str_length;
-      int** relations_storage;
+      location = status.MPI_SOURCE;
       relations_storage = alloc_2d_int(new_relations, size_FB);
-
       size = new_relations * size_FB;
+
       // STEP 2
       MPI_Recv(&relations_storage[0][0], size, MPI_INT, location, 0, MPI_COMM_WORLD, &status);
-
       if (need_more == 1){
         cout << "Writing in" << endl;
-
         for (int i = 0; i < new_relations; i++){
           for (int j = 0; j < size_FB; j++){
             expo_matrix_file << relations_storage[i][j];
             bit_val = relations_storage[i][j] % 2;
             bit_matrix_file << bit_val;
-
-
           }
           expo_matrix_file << endl;
           bit_matrix_file << endl;
         }
       }
 
+      // STEP 3
       MPI_Recv(&packed_str_length, 1, MPI_INT, location, 0, MPI_COMM_WORLD, &status);
-
-      char* str = new char[packed_str_length];
-
-      MPI_Recv(&str[0], packed_str_length, MPI_CHAR, location, 0, MPI_COMM_WORLD, &status);
-
-      cout << str << endl;
-
-      cout << typeid(str[0]).name();
+      packed_smooth_nums_m = new char[packed_str_length];
+      MPI_Recv(&packed_smooth_nums_m[0], packed_str_length, MPI_CHAR, location, 0, MPI_COMM_WORLD, &status);
 
       for (int i = 0; i < packed_str_length; i++){
-        if (str[i] != '|' && str[i] != '\0') {
-          smooth_num_file << str[i];
-        } else if (str[i] == '|') {
+        if (packed_smooth_nums_m[i] != '|' && packed_smooth_nums_m[i] != '\0') {
+          smooth_num_file << packed_smooth_nums_m[i];
+        } else if (packed_smooth_nums_m[i] == '|') {
           smooth_num_file << endl;
         }
       }
 
-
-
-
-      //STEP 3 bug
-      // MPI_Recv(&smooth_nums_storage[0], new_relations, MPI_INT, location, 0, MPI_COMM_WORLD, &status);
-      //
-      //
-      // if (need_more == 1){
-      //   string temp;
-      //   for (int j = 0; j < new_relations; j++){
-      //      temp = mpz_get_str(NULL, 10, SI_SAVE[smooth_nums_storage[j]].poly);
-      //      smooth_num_file << temp << endl;
-      //   }
-      // }
-
-
-
+      //set need more to zero, once enough relations exist 
       if (total_counter >= size_FB + 10){
         need_more = 0;
       }
 
+      //Inform worker of status (kill or mercy)
       MPI_Send(&need_more, 1, MPI_INT, location, 0, MPI_COMM_WORLD);
-      //free(smooth_nums_storage);
       if (need_more == 0){
-        cout << "Killed a process" << endl;
         dead_processes += 1;
-        cout << "Killed a process: " << dead_processes << endl;
       }
-
+      delete [] packed_smooth_nums_m;
+      delete [] relations_storage[0];
+      delete [] relations_storage;
     }
     smooth_num_file.close();
     expo_matrix_file.close();
-
-    cout << "We here and done" << endl;
-
 
  } else{
 
@@ -297,6 +261,7 @@ void sieving_step(prime_element *FB, mpz_t N, int fbs, int rank, MPI_Status stat
       int** power_storage = new int*[size_FB+1];
       string packed_smooth_nums;
       int* packed_length = new int;
+      char *packed;
 
       for (int i = 0; i < size_FB+1; i++){
         power_storage[i] = new int[block_size];
@@ -374,10 +339,10 @@ void sieving_step(prime_element *FB, mpz_t N, int fbs, int rank, MPI_Status stat
 
         //STEP3 SENDING SMOOTH NUMS
         packed_smooth_nums = pack(packed_length, smooth_nums, relations_amt);
-        cout << "PACKED LENGTH: "<< *packed_length << endl;
-        cout << "SMOOTH PACKED: " << packed_smooth_nums << endl;
+        // cout << "PACKED LENGTH: "<< *packed_length << endl;
+        // cout << "SMOOTH PACKED: " << packed_smooth_nums << endl;
 
-        char *packed = new char[*packed_length];
+        packed = new char[*packed_length];
         strcpy(packed, packed_smooth_nums.c_str());
 
         ret = MPI_Send(packed_length, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
@@ -389,6 +354,7 @@ void sieving_step(prime_element *FB, mpz_t N, int fbs, int rank, MPI_Status stat
         }
         delete[] power_storage;
 
+        delete[] packed;
         // delete packed_length;
         delete packed_length;
 
