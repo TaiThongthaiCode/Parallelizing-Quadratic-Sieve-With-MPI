@@ -232,7 +232,6 @@ void sieving_step(prime_element *FB, mpz_t N, int fbs, int rank, MPI_Status stat
       master_unpack_save(size_FB, expo_matrix_file, bit_matrix_file,  smooth_num_file);
 
       received_processes += 1;
-      cout << "GOT HERE" << endl;
     }
     smooth_num_file.close();
     expo_matrix_file.close();
@@ -306,7 +305,6 @@ void worker_pack_send(int tot_relations, int size_FB, int** all_relations, strin
 
      packed_smooth_nums = pack(packed_length, all_smooth, tot_relations);
 
-     cout << packed_smooth_nums << endl;
 
      packed = new char[*packed_length];
      strcpy(packed, packed_smooth_nums.c_str());
