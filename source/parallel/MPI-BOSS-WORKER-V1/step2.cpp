@@ -207,6 +207,7 @@ void sieving_step(prime_element *FB, mpz_t N, int fbs, int rank, MPI_Status stat
       int location = status.MPI_SOURCE;
 
       int* smooth_nums_storage = new int[new_relations];
+      int packed_str_length;
       int** relations_storage;
       relations_storage = alloc_2d_int(new_relations, size_FB);
 
@@ -229,6 +230,14 @@ void sieving_step(prime_element *FB, mpz_t N, int fbs, int rank, MPI_Status stat
           bit_matrix_file << endl;
         }
       }
+
+      MPI_Recv(&packed_str_length, 1, MPI_INT, location, 0, MPI_COMM_WORLD, &status);
+
+      char* str = new char[packed_str_length + 1];
+
+      MPI_Recv(&str[0], packed_str_length, MPI_CHAR, location, 0, MPI_COMM_WORLD, &status);
+
+      cout << str << endl;
 
 
       //STEP 3 bug
@@ -333,7 +342,7 @@ void sieving_step(prime_element *FB, mpz_t N, int fbs, int rank, MPI_Status stat
         relations = alloc_2d_int(relations_amt, size_FB);
         smooth_nums = new string[relations_amt];
 
-        
+
         reduce_and_transpose(smooth_nums, relations, power_storage, block_size, size_FB, SI_SAVE);
 
 
@@ -355,6 +364,13 @@ void sieving_step(prime_element *FB, mpz_t N, int fbs, int rank, MPI_Status stat
         packed_smooth_nums = pack(packed_length, smooth_nums, relations_amt);
         cout << "PACKED LENGTH: "<< *packed_length << endl;
         cout << "SMOOTH PACKED: " << packed_smooth_nums << endl;
+
+        char *packed = new char[*packed_length];
+        strcpy(packed, packed_smooth_nums.c_str());
+
+        ret = MPI_Send(packed_length, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
+
+        ret = MPI_Send(&packed[0], *packed_length, MPI_CHAR, 0, 0, MPI_COMM_WORLD);
 
         for (int i = 0; i < size_FB + 1; i++){
           delete[] power_storage[i];
@@ -464,11 +480,11 @@ string pack(int* string_length, string* smooth_nums, int relations_amt){
   *string_length = 0;
   string packed_smooth_nums = "";
   cout << "pak like anderson" << endl;
-  for (int i = 0; i < 5; i++){
+  for (int i = 0; i < relations_amt; i++){
     packed_smooth_nums = packed_smooth_nums + smooth_nums[i] + "|";
-    cout << "length" << smooth_nums[i].length() << endl;
     *string_length = *string_length + smooth_nums[i].length() + 1;
   }
+  *string_length = *string_length + 1;
 
   return packed_smooth_nums;
 
