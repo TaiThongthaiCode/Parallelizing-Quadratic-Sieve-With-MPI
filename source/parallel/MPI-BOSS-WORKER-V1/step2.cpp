@@ -159,24 +159,6 @@ void sieving_step(prime_element *FB, mpz_t N, int fbs, int rank, MPI_Status stat
   int continue_sieving = 1;
   int power, bit_val, size;
 
-  mpz_init(Tsq);
-  mpz_init(res);
-  mpz_init(T_hold);
-  mpz_init(a);
-  mpz_init(b);
-  mpz_init(p);
-  mpz_init(idx);
-  mpz_init(r);
-  mpz_init(min1);
-  mpz_init(min2);
-  mpz_init(poly);
-
-  //Find smallest value of T such that T^2 - N >= 0
-  mpz_init_set_ui(T, 1);
-  mpz_root(T, N, 2); // T = sqrt(N)
-  mpz_add_ui(T, T, 1); //Buffer T by one to ensure non negativity
-  mpz_set(T_hold, T);
- 
   if (rank == 0){
     int need_more = 1;
     int dead_processes = 0;
@@ -207,7 +189,6 @@ void sieving_step(prime_element *FB, mpz_t N, int fbs, int rank, MPI_Status stat
       // STEP 2
       MPI_Recv(&relations_storage[0][0], size, MPI_INT, location, 0, MPI_COMM_WORLD, &status);
       if (need_more == 1){
-        cout << "Writing in" << endl;
         for (int i = 0; i < new_relations; i++){
           for (int j = 0; j < size_FB; j++){
             expo_matrix_file << relations_storage[i][j];
@@ -250,10 +231,26 @@ void sieving_step(prime_element *FB, mpz_t N, int fbs, int rank, MPI_Status stat
     expo_matrix_file.close();
 
  } else{
+  mpz_init(Tsq);
+  mpz_init(res);
+  mpz_init(T_hold);
+  mpz_init(a);
+  mpz_init(b);
+  mpz_init(p);
+  mpz_init(idx);
+  mpz_init(r);
+  mpz_init(min1);
+  mpz_init(min2);
+  mpz_init(poly);
 
    int block_offset = (rank - 1)* block_size;
-   mpz_add_ui(T, T, block_offset);
-   mpz_set(T_hold, T);
+   //Find smallest value of T such that T^2 - N >= 0
+    mpz_init_set_ui(T, 1);
+    mpz_root(T, N, 2); // T = sqrt(N)
+    mpz_add_ui(T, T, 1); //Buffer T by one to ensure non negativity
+    mpz_set(T_hold, T);
+    mpz_add_ui(T, T, block_offset);
+    mpz_set(T_hold, T);
 
     while (continue_sieving == 1){
       string* smooth_nums;
@@ -262,6 +259,7 @@ void sieving_step(prime_element *FB, mpz_t N, int fbs, int rank, MPI_Status stat
       string packed_smooth_nums;
       int* packed_length = new int;
       char *packed;
+      int counter = 0;
 
       for (int i = 0; i < size_FB+1; i++){
         power_storage[i] = new int[block_size];
@@ -275,14 +273,6 @@ void sieving_step(prime_element *FB, mpz_t N, int fbs, int rank, MPI_Status stat
       polynomial_element * SI_SAVE = generate_sieving_interval(N, block_size, T);
       mpz_set(T, T_hold);
 
-      string temp;
-      temp = mpz_get_str(NULL, 10, T_hold);
-      cout << "Rank: " << rank << "has starting val " << temp << endl;
-
-
-      // counting number of relations
-      int counter = 0;
-
       for (int i = 0; i < size_FB; i++){
           //convert p, a, b to mpz types
           mpz_set_ui(p, FB[i].p);
@@ -291,18 +281,12 @@ void sieving_step(prime_element *FB, mpz_t N, int fbs, int rank, MPI_Status stat
 
           unsigned long init1 = prime_find_min(block_size, a, p, min1, T, r, idx, rank);
           unsigned long init2 = prime_find_min(block_size, b, p, min2, T, r, idx, rank);
-
-
-          //prepare for for loop
           int step = mpz_get_ui (p);
-          mpz_t res;
-          mpz_init(res);
 
           //go ahead and do all of the divisions
           if (init1 < block_size + 1){
               prime_divide(SI, power_storage, block_size, size_FB, init1, step, &counter, i);
           }
-
           if (init2 < block_size + 1){
               prime_divide(SI, power_storage, block_size, size_FB, init2, step, &counter, i);
           }
@@ -314,24 +298,12 @@ void sieving_step(prime_element *FB, mpz_t N, int fbs, int rank, MPI_Status stat
             relations_amt += 1;
           }
         }
-
-
         relations = alloc_2d_int(relations_amt, size_FB);
         smooth_nums = new string[relations_amt];
-
-
         reduce_and_transpose(smooth_nums, relations, power_storage, block_size, size_FB, SI_SAVE);
-
-
-        for (int i = 0; i < relations_amt; i++){
-          cout << smooth_nums[i] << endl;
-        }
-
 
         //STEP 1 SEND
         int ret = MPI_Send(&relations_amt, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
-
-        cout << "Rank: " << rank << "has " << relations_amt << " new relations" << endl;
 
         //STEP2
         int size = (size_FB) * relations_amt;
@@ -339,25 +311,18 @@ void sieving_step(prime_element *FB, mpz_t N, int fbs, int rank, MPI_Status stat
 
         //STEP3 SENDING SMOOTH NUMS
         packed_smooth_nums = pack(packed_length, smooth_nums, relations_amt);
-        // cout << "PACKED LENGTH: "<< *packed_length << endl;
-        // cout << "SMOOTH PACKED: " << packed_smooth_nums << endl;
-
         packed = new char[*packed_length];
         strcpy(packed, packed_smooth_nums.c_str());
-
         ret = MPI_Send(packed_length, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
-
         ret = MPI_Send(&packed[0], *packed_length, MPI_CHAR, 0, 0, MPI_COMM_WORLD);
+
 
         for (int i = 0; i < size_FB + 1; i++){
           delete[] power_storage[i];
         }
         delete[] power_storage;
-
         delete[] packed;
-        // delete packed_length;
         delete packed_length;
-
         delete[] smooth_nums;
         delete [] relations[0];  // remove the pool
         delete [] relations;     // remove the pointers
@@ -366,12 +331,7 @@ void sieving_step(prime_element *FB, mpz_t N, int fbs, int rank, MPI_Status stat
 
         mpz_add_ui(T, T, offset);
         mpz_set(T_hold, T);
-
         MPI_Recv(&continue_sieving, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, &status);
-
-        if (continue_sieving == 0){
-          cout << "Rank " << rank << " has been told to stop" << endl;
-        }
       }
     }
   }
@@ -457,7 +417,6 @@ string pack(int* string_length, string* smooth_nums, int relations_amt){
 
   *string_length = 0;
   string packed_smooth_nums = "";
-  cout << "pak like anderson" << endl;
   for (int i = 0; i < relations_amt; i++){
     packed_smooth_nums = packed_smooth_nums + smooth_nums[i] + "|";
     *string_length = *string_length + smooth_nums[i].length() + 1;
