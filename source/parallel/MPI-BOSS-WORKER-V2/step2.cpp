@@ -36,14 +36,14 @@ int main(int argc, char *argv[]){
     //Set value of N
     mpz_t N;
     mpz_init(N);
-    mpz_set_str(N, "1147", 10);
+    mpz_set_str(N, "11708207610563861387", 10);
 
     size_t j = mpz_sizeinbase (N, 10);
     int size = static_cast<int>(j);
 
     //current size of sieving interval
     //int pes = 386*size*size -23209.3*size + 2352768;
-    block_size = 200;
+    block_size = 32000;
 
     int relation_count = 0;
 
