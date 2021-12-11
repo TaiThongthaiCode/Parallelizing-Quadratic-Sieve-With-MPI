@@ -36,4 +36,8 @@ unsigned long prime_find_min(int size_SI, mpz_t a, mpz_t p, mpz_t min, mpz_t T, 
 void reduce_and_transpose(string* smooth_nums, int** relations, int** power_storage, int block_size, int size_FB, polynomial_element *SI);
 string pack(int* string_length, string* smooth_nums, int relations_amt);
 
+void master_unpack_save(int size_FB, ofstream& expo_matrix_file, ofstream& bit_matrix_file, ofstream& smooth_num_file);
+void worker_sieves(int** power_storage, int* counter, int block_size, mpz_t N, mpz_t T, int size_FB, prime_element* FB, int* relations_amt, int rank, polynomial_element* SI);
+void update_total(string* all_smooth, int** all_relations, int max_relations, int* tot_relations, int size_FB, int** relations, string*smooth_nums, int relations_amt);
+void worker_pack_send(int tot_relations, int size_FB, int** all_relations, string* all_smooth);
 //void solve_matrix();

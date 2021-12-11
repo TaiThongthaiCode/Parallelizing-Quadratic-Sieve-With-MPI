@@ -148,229 +148,134 @@ polynomial_element * generate_sieving_interval(mpz_t N, int block_size, mpz_t T)
     return SI;
 }
 
+void master_unpack_save(int size_FB, ofstream& expo_matrix_file, ofstream& bit_matrix_file, ofstream& smooth_num_file){
+  int location, new_relations, size, bit_val, packed_str_length;
+  int* smooth_nums_storage;
+  int **relations_storage;
+  char* str;
+  MPI_Status status;
+
+  MPI_Recv(&new_relations, 1, MPI_INT, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, &status);
+
+  location = status.MPI_SOURCE;
+  smooth_nums_storage = new int[new_relations];
+  relations_storage = alloc_2d_int(new_relations, size_FB);
+
+  size = new_relations * size_FB;
+  MPI_Recv(&relations_storage[0][0], size, MPI_INT, location, 0, MPI_COMM_WORLD, &status);
+
+  for (int i = 0; i < new_relations; i++){
+    for (int j = 0; j < size_FB; j++){
+      expo_matrix_file << relations_storage[i][j];
+      bit_val = relations_storage[i][j] % 2;
+      bit_matrix_file << bit_val;
+    }
+    expo_matrix_file << endl;
+    bit_matrix_file << endl;
+  }
+
+  MPI_Recv(&packed_str_length, 1, MPI_INT, location, 0, MPI_COMM_WORLD, &status);
+
+  str = new char[packed_str_length];
+
+  MPI_Recv(&str[0], packed_str_length, MPI_CHAR, location, 0, MPI_COMM_WORLD, &status);
+
+  for (int i = 0; i < packed_str_length; i++){
+    if (str[i] != '|' && str[i] != '\0') {
+      smooth_num_file << str[i];
+    } else if (str[i] == '|') {
+      smooth_num_file << endl;
+    }
+  }
+
+  delete [] smooth_nums_storage;
+  delete [] str;
+  delete [] relations_storage[0];
+  delete [] relations_storage;
+}
+
 
 //step where we repeatedly divide until we have the required number of relations
 void sieving_step(prime_element *FB, mpz_t N, int fbs, int rank, MPI_Status status, int block_size, int num_proc){
 
   //intialize values and recompute value for T
-  mpz_t T, T_hold, p, a, b, idx, r, min1, min2, poly;
+  mpz_t T, T_hold, poly;
   int size_FB = fbs;
-  int power;
-  int size;
   int continue_sieving = 1;
-  int bit_val;
 
   //Find smallest value of T such that T^2 - N >= 0
   mpz_t Tsq, res;
   mpz_init(Tsq);
   mpz_init(res);
   mpz_init(T_hold);
-  mpz_init(a);
-  mpz_init(b);
-  mpz_init(p);
-  mpz_init(idx);
-  mpz_init(r);
-  mpz_init(min1);
-  mpz_init(min2);
   mpz_init(poly);
+
   mpz_init_set_ui(T, 1);
   mpz_root(T, N, 2); // T = sqrt(N)
   mpz_add_ui(T, T, 1); //Buffer T by one to ensure non negativity
   mpz_set(T_hold, T);
 
-
-  //MASTER VARS
-  int** power_storage;
-  power_storage = alloc_2d_int(size_FB + 1, block_size);
   int received_processes = 0;
-  int relations_amt = 0;
   int tot_relations = 0;
   int max_relations = (size_FB + 10)/(num_proc - 1) + 1;
-  cout << "We find that max_relaitons has value " << max_relations << endl;
-  int leftover;
-  int bound;
-
-  cout << "Inside this function" << endl;
-
 
   if (rank == 0){
-
-    int packed_str_length;
-    char* str;
-
-
-    int new_relations = 0;
-
     ofstream smooth_num_file;
     smooth_num_file.open ("Smooth_Num.txt");
-
     ofstream expo_matrix_file;
     expo_matrix_file.open ("Expo_Matrix.txt");
-
     ofstream bit_matrix_file;
     bit_matrix_file.open("Bit_Matrix.txt");
 
-
-
     while (received_processes < num_proc - 1){
-      MPI_Recv(&new_relations, 1, MPI_INT, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, &status);
 
-      int location = status.MPI_SOURCE;
-
-      int* smooth_nums_storage = new int[new_relations];
-      int **relations_storage;
-      relations_storage = alloc_2d_int(new_relations, size_FB);
-
-      size = new_relations * size_FB;
-      MPI_Recv(&relations_storage[0][0], size, MPI_INT, location, 0, MPI_COMM_WORLD, &status);
-
-
-      for (int i = 0; i < new_relations; i++){
-        for (int j = 0; j < size_FB; j++){
-          expo_matrix_file << relations_storage[i][j];
-          bit_val = relations_storage[i][j] % 2;
-          bit_matrix_file << bit_val;
-        }
-        expo_matrix_file << endl;
-        bit_matrix_file << endl;
-      }
-
-
-      MPI_Recv(&packed_str_length, 1, MPI_INT, location, 0, MPI_COMM_WORLD, &status);
-
-      str = new char[packed_str_length];
-
-      MPI_Recv(&str[0], packed_str_length, MPI_CHAR, location, 0, MPI_COMM_WORLD, &status);
-
-      for (int i = 0; i < packed_str_length; i++){
-        if (str[i] != '|' && str[i] != '\0') {
-          smooth_num_file << str[i];
-        } else if (str[i] == '|') {
-          smooth_num_file << endl;
-        }
-      }
+      master_unpack_save(size_FB, expo_matrix_file, bit_matrix_file,  smooth_num_file);
 
       received_processes += 1;
-
-      cout << new_relations << " is amount" << endl;
-
-
-      string temp;
-      // for (int k = 0; k < new_relations; k++){
-      //       // temp = mpz_get_str(NULL, 10, SI_SAVE[smooth_nums_storage[j]].poly);
-      //       // smooth_num_file << temp << endl;
-      //       smooth_num_file << smooth_nums_storage[k] << endl;
-      // }
-
       cout << "GOT HERE" << endl;
-
-      // free(smooth_nums_storage);
-      delete [] relations_storage[0];
-      delete [] relations_storage;
-
-
     }
     smooth_num_file.close();
     expo_matrix_file.close();
     bit_matrix_file.close();
 
-
-
-
  } else{
-
 
    string* all_smooth = new string[max_relations];
    int** all_relations;
    all_relations = alloc_2d_int(max_relations, size_FB);
+
    int block_offset = (rank - 1)*block_size;
    mpz_add_ui(T, T, block_offset);
    mpz_set(T_hold, T);
 
-   int* packed_length = new int;
-   *packed_length = 0;
-   string packed_smooth_nums;
-   char* packed;
-
-  int counter = 0;
+   int counter = 0;
 
    while (tot_relations < max_relations){
-     string* smooth_nums;
      int** relations;
+     string* smooth_nums;
+     int relations_amt = 0;
 
-     string temp;
-     temp = mpz_get_str(NULL, 10, T_hold);
-     cout << "For rank: " << rank << "we find " << temp << endl;
-
+     int** power_storage = new int*[size_FB+1];
+     for (int i = 0; i < size_FB+1; i++){
+       power_storage[i] = new int[block_size];
+       for (int j = 0; j< block_size; j++){
+         power_storage[i][j] = 0;
+       }
+     }
 
      polynomial_element * SI = generate_sieving_interval(N, block_size, T);
      mpz_set(T, T_hold);
      polynomial_element * SISAVE = generate_sieving_interval(N, block_size, T);
      mpz_set(T, T_hold);
 
-
-     for (int i = 0; i < size_FB; i++){
-       mpz_set_ui(p, FB[i].p);
-       mpz_set_ui(a, FB[i].a);
-       mpz_set_ui(b, FB[i].b);
-
-       unsigned long init1 = prime_find_min(block_size, a, p, min1, T, r, idx, rank);
-
-       unsigned long init2 = prime_find_min(block_size, b, p, min2, T, r, idx, rank);
-
-       int step = mpz_get_ui (p);
-       mpz_t res;
-       mpz_init(res);
-
-       if (init1 < block_size + 1){
-           prime_divide(SI, power_storage, block_size, size_FB, init1, step, &counter, i);
-       }
-
-       if (init2 < block_size + 1){
-         prime_divide(SI, power_storage, block_size, size_FB, init2, step, &counter, i);
-       }
-
-       if (counter >= max_relations){
-         break;
-       }
-     }
-
-
-     // cout << counter << endl;
-     // cout << max_relations << endl;
-
-      int relations_amt = 0;
-      for (int j = 0; j < block_size; j++){
-        if (power_storage[size_FB][j] == 1){smooth_nums,
-            relations_amt += 1;
-          }
-      }
-
+     worker_sieves(power_storage, &counter, block_size, N, T, size_FB, FB, &relations_amt, rank, SI);
 
       smooth_nums = new string[relations_amt];
       relations = alloc_2d_int(relations_amt, size_FB);
 
-
       reduce_and_transpose(smooth_nums, relations, power_storage, block_size, size_FB, SISAVE);
 
-
-      leftover = max_relations - tot_relations;
-
-
-      bound = min(relations_amt, leftover);
-
-
-      for (int i = 0; i < bound; i++){
-        all_smooth[tot_relations+ i] = smooth_nums[i];
-        for (int j = 0; j < size_FB; j++){
-          all_relations[tot_relations + i][j] = relations[i][j];
-        }
-      }
-
-      tot_relations += bound;
-
-      cout << "Our total number of relations is " << tot_relations <<  " for rank"  << rank << endl;
-
+      update_total(all_smooth, all_relations, max_relations, &tot_relations, size_FB, relations, smooth_nums, relations_amt);
 
       int offset = block_size * (num_proc - 1);
       mpz_add_ui(T, T, offset);
@@ -379,29 +284,93 @@ void sieving_step(prime_element *FB, mpz_t N, int fbs, int rank, MPI_Status stat
       delete [] smooth_nums;
       delete [] relations[0];
       delete [] relations;
-
-
    }
 
-   int size = tot_relations * size_FB;
-   int ret  = MPI_Send(&tot_relations, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
-   cout << "Send one success" << endl;
-   ret = MPI_Send(&all_relations[0][0],size, MPI_INT, 0, 0, MPI_COMM_WORLD);
-   cout << "Send two success" << endl;
+   worker_pack_send(tot_relations, size_FB, all_relations, all_smooth);
 
-   packed_smooth_nums = pack(packed_length, all_smooth, tot_relations);
-
-   cout << packed_smooth_nums << endl;
-
-   packed = new char[*packed_length];
-   strcpy(packed, packed_smooth_nums.c_str());
-
-   ret = MPI_Send(packed_length, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
-   ret = MPI_Send(&packed[0], *packed_length, MPI_CHAR, 0, 0, MPI_COMM_WORLD);
-
-   delete[] packed;
-
+   delete [] all_smooth;
+   delete [] all_relations[0];
+   delete [] all_relations;
   }
+}
+
+void worker_pack_send(int tot_relations, int size_FB, int** all_relations, string* all_smooth){
+     int* packed_length = new int;
+     *packed_length = 0;
+     string packed_smooth_nums;
+     char* packed;
+     int size = tot_relations * size_FB;
+
+     int ret  = MPI_Send(&tot_relations, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
+     ret = MPI_Send(&all_relations[0][0],size, MPI_INT, 0, 0, MPI_COMM_WORLD);
+
+     packed_smooth_nums = pack(packed_length, all_smooth, tot_relations);
+
+     cout << packed_smooth_nums << endl;
+
+     packed = new char[*packed_length];
+     strcpy(packed, packed_smooth_nums.c_str());
+     ret = MPI_Send(packed_length, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
+     ret = MPI_Send(&packed[0], *packed_length, MPI_CHAR, 0, 0, MPI_COMM_WORLD);
+
+     delete[] packed;
+}
+
+void update_total(string* all_smooth, int** all_relations, int max_relations, int* tot_relations, int size_FB, int** relations, string*smooth_nums, int relations_amt){
+  int leftover;
+  int bound;
+  leftover = max_relations - *tot_relations;
+  bound = min(relations_amt, leftover);
+
+  for (int i = 0; i < bound; i++){
+    all_smooth[*tot_relations+ i] = smooth_nums[i];
+    for (int j = 0; j < size_FB; j++){
+      all_relations[*tot_relations + i][j] = relations[i][j];
+    }
+  }
+
+  *tot_relations += bound;
+}
+
+
+void worker_sieves(int** power_storage, int* counter, int block_size, mpz_t N, mpz_t T, int size_FB, prime_element* FB, int* relations_amt, int rank, polynomial_element* SI){
+  mpz_t p, a, b, r, idx, min1, min2;
+  mpz_init(p);
+  mpz_init(a);
+  mpz_init(b);
+  mpz_init(r);
+  mpz_init(idx);
+  mpz_init(min1);
+  mpz_init(min2);
+  int step;
+
+
+  for (int i = 0; i < size_FB; i++){
+      //convert p, a, b to mpz types
+      mpz_set_ui(p, FB[i].p);
+      mpz_set_ui(a, FB[i].a);
+      mpz_set_ui(b, FB[i].b);
+
+      unsigned long init1 = prime_find_min(block_size, a, p, min1, T, r, idx, rank);
+      unsigned long init2 = prime_find_min(block_size, b, p, min2, T, r, idx, rank);
+      step = mpz_get_ui (p);
+
+      //go ahead and do all of the divisions
+      if (init1 < block_size + 1){
+          prime_divide(SI, power_storage, block_size, size_FB, init1, step, counter, i);
+      }
+      if (init2 < block_size + 1){
+          prime_divide(SI, power_storage, block_size, size_FB, init2, step, counter, i);
+      }
+    }
+
+
+    for (int j = 0; j < block_size; j++){
+      if (power_storage[size_FB][j] == 1){
+        *relations_amt += 1;
+      }
+    }
+    int rels = *relations_amt;
 
 }
 
