@@ -233,11 +233,23 @@ void sieving_step(prime_element *FB, mpz_t N, int fbs, int rank, MPI_Status stat
 
       MPI_Recv(&packed_str_length, 1, MPI_INT, location, 0, MPI_COMM_WORLD, &status);
 
-      char* str = new char[packed_str_length + 1];
+      char* str = new char[packed_str_length];
 
       MPI_Recv(&str[0], packed_str_length, MPI_CHAR, location, 0, MPI_COMM_WORLD, &status);
 
       cout << str << endl;
+
+      cout << typeid(str[0]).name();
+
+      for (int i = 0; i < packed_str_length; i++){
+        if (str[i] != '|' && str[i] != '\0') {
+          smooth_num_file << str[i];
+        } else if (str[i] == '|') {
+          smooth_num_file << endl;
+        }
+      }
+
+
 
 
       //STEP 3 bug
