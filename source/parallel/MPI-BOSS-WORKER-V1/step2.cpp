@@ -148,153 +148,138 @@ polynomial_element * generate_sieving_interval(mpz_t N, int pes, mpz_t T){
     }
     return SI;
 }
-//
-// void master_unpack_save(int* total_counter, int size_FB, int* need_more, ofstream& expo_matrix_file, ofstream& bit_matrix_file, ofstream& smooth_num_file, int* dead_processes){
-//   int new_relations, location, size, bit_val packed_str_length;
-//   MPI_Status status;
-//   int** relations_storage;
-//   char* packed_smooth_nums_m;
-//
-//   // STEP 1 REC
-//   MPI_Recv(&new_relations, 1, MPI_INT, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, &status);
-//   *total_counter += new_relations;
-//   location = status.MPI_SOURCE;
-//   size = new_relations * size_FB;
-//
-//   //STEP 2 REC
-//   MPI_Recv(&relations_storage[0][0], size, MPI_INT, location, 0, MPI_COMM_WORLD, &status);
-//   if (int* need_more == 1){
-//     for (int i = 0; i < new_relations; i++){
-//       for (int j = 0; j < size_FB; j++){
-//         expo_matrix_file << relations_storage[i][j];
-//         bit_val = relations_storage[i][j] % 2;
-//         bit_matrix_file << bit_val;
-//       }
-//       expo_matrix_file << endl;
-//       bit_matrix_file << endl;
-//     }
-//   }
-//
-//   // STEP 3
-//   MPI_Recv(&packed_str_length, 1, MPI_INT, location, 0, MPI_COMM_WORLD, &status);
-//   packed_smooth_nums_m = new char[packed_str_length];
-//   MPI_Recv(&packed_smooth_nums_m[0], packed_str_length, MPI_CHAR, location, 0, MPI_COMM_WORLD, &status);
-//
-//   for (int i = 0; i < packed_str_length; i++){
-//     if (packed_smooth_nums_m[i] != '|' && packed_smooth_nums_m[i] != '\0') {
-//       smooth_num_file << packed_smooth_nums_m[i];
-//     } else if (packed_smooth_nums_m[i] == '|') {
-//       smooth_num_file << endl;
-//     }
-//   }
-//
-//   //set need more to zero, once enough relations exist
-//   if (*total_counter >= size_FB + 10){
-//     *need_more = 0;
-//   }
-//
-//
-//   MPI_Send(&need_more, 1, MPI_INT, location, 0, MPI_COMM_WORLD);
-//   if (*need_more == 0){
-//     dead_processes* += 1;
-//   }
-//
-//   delete [] packed_smooth_nums_m;
-//   delete [] relations_storage[0];
-//   delete [] relations_storage;
-// }
+
+void master_unpack_save(int* total_counter, int size_FB, int* need_more, ofstream& expo_matrix_file, ofstream& bit_matrix_file, ofstream& smooth_num_file, int* dead_processes){
+  int new_relations, location, size, bit_val, packed_str_length;
+  MPI_Status status;
+  int** relations_storage;
+  char* packed_smooth_nums_m;
+
+  // STEP 1 REC
+  MPI_Recv(&new_relations, 1, MPI_INT, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, &status);
+  *total_counter += new_relations;
+  location = status.MPI_SOURCE;
+  size = new_relations * size_FB;
+  relations_storage = alloc_2d_int(size_FB, new_relations);
+
+  //STEP 2 REC
+  MPI_Recv(&relations_storage[0][0], size, MPI_INT, location, 0, MPI_COMM_WORLD, &status);
+  if (*need_more == 1){
+    for (int i = 0; i < new_relations; i++){
+      for (int j = 0; j < size_FB; j++){
+        expo_matrix_file << relations_storage[i][j];
+        bit_val = relations_storage[i][j] % 2;
+        bit_matrix_file << bit_val;
+      }
+      expo_matrix_file << endl;
+      bit_matrix_file << endl;
+    }
+  }
+
+  // STEP 3
+  MPI_Recv(&packed_str_length, 1, MPI_INT, location, 0, MPI_COMM_WORLD, &status);
+  packed_smooth_nums_m = new char[packed_str_length];
+  MPI_Recv(&packed_smooth_nums_m[0], packed_str_length, MPI_CHAR, location, 0, MPI_COMM_WORLD, &status);
+
+  for (int i = 0; i < packed_str_length; i++){
+    if (packed_smooth_nums_m[i] != '|' && packed_smooth_nums_m[i] != '\0') {
+      smooth_num_file << packed_smooth_nums_m[i];
+    } else if (packed_smooth_nums_m[i] == '|') {
+      smooth_num_file << endl;
+    }
+  }
+
+  //set need more to zero, once enough relations exist
+  if (*total_counter >= size_FB + 10){
+    *need_more = 0;
+  }
+
+
+  MPI_Send(need_more, 1, MPI_INT, location, 0, MPI_COMM_WORLD);
+  if (*need_more == 0){
+    *dead_processes += 1;
+  }
+
+
+  delete [] packed_smooth_nums_m;
+  delete [] relations_storage[0];
+  delete [] relations_storage;
+}
+
+void worker_sieves(int** power_storage, int* counter, int block_size, mpz_t N, mpz_t T, int size_FB, prime_element* FB, int* relations_amt, int rank, polynomial_element* SI){
+  mpz_t p, a, b, r, idx, min1, min2;
+  mpz_init(p);
+  mpz_init(a);
+  mpz_init(b);
+  mpz_init(r);
+  mpz_init(idx);
+  mpz_init(min1);
+  mpz_init(min2);
+  int step;
+
+
+  for (int i = 0; i < size_FB; i++){
+      //convert p, a, b to mpz types
+      mpz_set_ui(p, FB[i].p);
+      mpz_set_ui(a, FB[i].a);
+      mpz_set_ui(b, FB[i].b);
+
+      unsigned long init1 = prime_find_min(block_size, a, p, min1, T, r, idx, rank);
+      unsigned long init2 = prime_find_min(block_size, b, p, min2, T, r, idx, rank);
+      step = mpz_get_ui (p);
+
+      //go ahead and do all of the divisions
+      if (init1 < block_size + 1){
+          prime_divide(SI, power_storage, block_size, size_FB, init1, step, counter, i);
+      }
+      if (init2 < block_size + 1){
+          prime_divide(SI, power_storage, block_size, size_FB, init2, step, counter, i);
+      }
+    }
+
+
+    for (int j = 0; j < block_size; j++){
+      if (power_storage[size_FB][j] == 1){
+        *relations_amt += 1;
+      }
+    }
+    int rels = *relations_amt;
+
+}
 
 //step where we repeatedly divide until we have the required number of relations
 void sieving_step(prime_element *FB, mpz_t N, int fbs, int rank, MPI_Status status, int block_size, int num_proc){
 
   //intialize values and recompute value for T
-  mpz_t T, T_hold, p, a, b, idx, r, min1, min2, poly, Tsq, res;
+  mpz_t T, T_hold, poly, Tsq, res;
   int size_FB = fbs;
   int continue_sieving = 1;
-  int power, bit_val, size;
+  int power, size;
 
   if (rank == 0){
     int need_more = 1;
     int dead_processes = 0;
     int total_counter = 0;
-    int new_relations, packed_str_length, location;
 
     ofstream smooth_num_file;
     smooth_num_file.open ("Smooth_Num.txt");
-
     ofstream expo_matrix_file;
     expo_matrix_file.open ("Expo_Matrix.txt");
-
     ofstream bit_matrix_file;
     bit_matrix_file.open("Bit_Matrix.txt");
 
     while (dead_processes < num_proc - 1){
-        char* packed_smooth_nums_m;
-        int** relations_storage;
+      master_unpack_save(&total_counter, size_FB, &need_more, expo_matrix_file, bit_matrix_file, smooth_num_file, &dead_processes);
 
-
-      // STEP 1 REC
-      MPI_Recv(&new_relations, 1, MPI_INT, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, &status);
-      total_counter += new_relations;
-      location = status.MPI_SOURCE;
-      relations_storage = alloc_2d_int(new_relations, size_FB);
-      size = new_relations * size_FB;
-
-      // STEP 2
-      MPI_Recv(&relations_storage[0][0], size, MPI_INT, location, 0, MPI_COMM_WORLD, &status);
-      if (need_more == 1){
-        for (int i = 0; i < new_relations; i++){
-          for (int j = 0; j < size_FB; j++){
-            expo_matrix_file << relations_storage[i][j];
-            bit_val = relations_storage[i][j] % 2;
-            bit_matrix_file << bit_val;
-          }
-          expo_matrix_file << endl;
-          bit_matrix_file << endl;
-        }
-      }
-
-      // STEP 3
-      MPI_Recv(&packed_str_length, 1, MPI_INT, location, 0, MPI_COMM_WORLD, &status);
-      packed_smooth_nums_m = new char[packed_str_length];
-      MPI_Recv(&packed_smooth_nums_m[0], packed_str_length, MPI_CHAR, location, 0, MPI_COMM_WORLD, &status);
-
-      for (int i = 0; i < packed_str_length; i++){
-        if (packed_smooth_nums_m[i] != '|' && packed_smooth_nums_m[i] != '\0') {
-          smooth_num_file << packed_smooth_nums_m[i];
-        } else if (packed_smooth_nums_m[i] == '|') {
-          smooth_num_file << endl;
-        }
-      }
-
-      //set need more to zero, once enough relations exist
-      if (total_counter >= size_FB + 10){
-        need_more = 0;
-      }
-
-      //Inform worker of status (kill or mercy)
-      MPI_Send(&need_more, 1, MPI_INT, location, 0, MPI_COMM_WORLD);
-      if (need_more == 0){
-        dead_processes += 1;
-      }
-      delete [] packed_smooth_nums_m;
-      delete [] relations_storage[0];
-      delete [] relations_storage;
     }
     smooth_num_file.close();
     expo_matrix_file.close();
+    bit_matrix_file.close();
 
  } else{
   mpz_init(Tsq);
   mpz_init(res);
   mpz_init(T_hold);
-  mpz_init(a);
-  mpz_init(b);
-  mpz_init(p);
-  mpz_init(idx);
-  mpz_init(r);
-  mpz_init(min1);
-  mpz_init(min2);
   mpz_init(poly);
 
    int block_offset = (rank - 1)* block_size;
@@ -307,79 +292,39 @@ void sieving_step(prime_element *FB, mpz_t N, int fbs, int rank, MPI_Status stat
     mpz_set(T_hold, T);
 
     while (continue_sieving == 1){
-      string* smooth_nums;
-      int** relations;
-      int** power_storage = new int*[size_FB+1];
-      string packed_smooth_nums;
-      int* packed_length = new int;
-      char *packed;
-      int counter = 0;
-
-      for (int i = 0; i < size_FB+1; i++){
-        power_storage[i] = new int[block_size];
-        for (int j = 0; j< block_size; j++){
-          power_storage[i][j] = 0;
-        }
-      }
-
-      polynomial_element * SI = generate_sieving_interval(N, block_size, T);
-      mpz_set(T, T_hold);
-      polynomial_element * SI_SAVE = generate_sieving_interval(N, block_size, T);
-      mpz_set(T, T_hold);
-
-      for (int i = 0; i < size_FB; i++){
-          //convert p, a, b to mpz types
-          mpz_set_ui(p, FB[i].p);
-          mpz_set_ui(a, FB[i].a);
-          mpz_set_ui(b, FB[i].b);
-
-          unsigned long init1 = prime_find_min(block_size, a, p, min1, T, r, idx, rank);
-          unsigned long init2 = prime_find_min(block_size, b, p, min2, T, r, idx, rank);
-          int step = mpz_get_ui (p);
-
-          //go ahead and do all of the divisions
-          if (init1 < block_size + 1){
-              prime_divide(SI, power_storage, block_size, size_FB, init1, step, &counter, i);
-          }
-          if (init2 < block_size + 1){
-              prime_divide(SI, power_storage, block_size, size_FB, init2, step, &counter, i);
-          }
-        }
-
+        int** relations;
+        int counter = 0;
         int relations_amt = 0;
-        for (int j = 0; j < block_size; j++){
-          if (power_storage[size_FB][j] == 1){
-            relations_amt += 1;
+        int** power_storage = new int*[size_FB+1];
+        string* smooth_nums;
+
+        for (int i = 0; i < size_FB+1; i++){
+          power_storage[i] = new int[block_size];
+          for (int j = 0; j< block_size; j++){
+            power_storage[i][j] = 0;
           }
         }
+
+        polynomial_element * SI = generate_sieving_interval(N, block_size, T);
+        mpz_set(T, T_hold);
+        polynomial_element * SI_SAVE = generate_sieving_interval(N, block_size, T);
+        mpz_set(T, T_hold);
+
+        worker_sieves(power_storage, &counter, block_size, N, T, size_FB, FB, &relations_amt, rank, SI);
+
         relations = alloc_2d_int(relations_amt, size_FB);
         smooth_nums = new string[relations_amt];
+
         reduce_and_transpose(smooth_nums, relations, power_storage, block_size, size_FB, SI_SAVE);
-
-        //STEP 1 SEND
-        int ret = MPI_Send(&relations_amt, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
-
-        //STEP2
-        int size = (size_FB) * relations_amt;
-        ret = MPI_Send(&relations[0][0], size, MPI_INT, 0, 0, MPI_COMM_WORLD);
-
-        //STEP3 SENDING SMOOTH NUMS
-        packed_smooth_nums = pack(packed_length, smooth_nums, relations_amt);
-        packed = new char[*packed_length];
-        strcpy(packed, packed_smooth_nums.c_str());
-        ret = MPI_Send(packed_length, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
-        ret = MPI_Send(&packed[0], *packed_length, MPI_CHAR, 0, 0, MPI_COMM_WORLD);
-
+        worker_pack_send(&relations_amt, size_FB, relations, smooth_nums);
 
         for (int i = 0; i < size_FB + 1; i++){
           delete[] power_storage[i];
         }
         delete[] power_storage;
-        delete[] packed;
-        delete packed_length;
-        delete[] smooth_nums;
         delete [] relations[0];  // remove the pool
         delete [] relations;     // remove the pointers
+        delete [] smooth_nums;
 
         int offset = block_size * (num_proc - 1);
 
@@ -389,6 +334,32 @@ void sieving_step(prime_element *FB, mpz_t N, int fbs, int rank, MPI_Status stat
       }
     }
   }
+
+void worker_pack_send(int* relations_amt, int size_FB, int** relations, string* smooth_nums){
+  string packed_smooth_nums;
+  int rels = *relations_amt;
+  int* packed_length = new int;
+  char *packed;
+
+  //STEP 1 SEND
+  int ret = MPI_Send(&rels, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
+
+  //STEP2
+  int size = (size_FB) * rels;
+  ret = MPI_Send(&relations[0][0], size, MPI_INT, 0, 0, MPI_COMM_WORLD);
+
+  //STEP3 SENDING SMOOTH NUMS
+  packed_smooth_nums = pack(packed_length, smooth_nums, rels);
+  packed = new char[*packed_length];
+  strcpy(packed, packed_smooth_nums.c_str());
+  ret = MPI_Send(packed_length, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
+  ret = MPI_Send(&packed[0], *packed_length, MPI_CHAR, 0, 0, MPI_COMM_WORLD);
+
+  delete[] packed;
+  delete[] packed_length;
+
+
+}
 
 int **alloc_2d_int(int rows, int cols) {
     int *data = (int *)malloc(rows*cols*sizeof(int));

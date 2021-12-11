@@ -34,7 +34,11 @@ void prime_divide(polynomial_element* SI, int** power_storage, int block_size, i
 unsigned long prime_find_min(int block_size, mpz_t a, mpz_t p, mpz_t min, mpz_t T, mpz_t r, mpz_t idx, int rank);
 
 void reduce_and_transpose(string* smooth_nums, int** relations, int** power_storage, int block_size, int size_FB, polynomial_element* SI);
+void master_unpack_save(int* total_counter, int size_FB, int* need_more, ofstream& expo_matrix_file, ofstream& bit_matrix_file, ofstream& smooth_num_file, int* dead_processes);
+
+void worker_sieves(int** power_storage, int* counter, int block_size, mpz_t N, mpz_t T, int size_FB, prime_element* FB, int* relations_amt, int rank, polynomial_element* SI);
 
 string pack(int* string_length, string* smooth_nums, int relations_amt);
+void worker_pack_send(int* relations_amt, int size_FB, int** relations, string* smooth_nums);
 
 //void solve_matrix();
