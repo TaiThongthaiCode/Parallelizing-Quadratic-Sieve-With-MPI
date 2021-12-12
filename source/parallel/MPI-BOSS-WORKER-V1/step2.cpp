@@ -37,7 +37,7 @@ int main(int argc, char *argv[]){
     unsigned int rank = 0;
     unsigned long num_proc = 0;
     MPI_Status status;
-    int block_size = 32000;
+    int block_size = 3;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, (int*) &num_proc);
@@ -217,13 +217,14 @@ void master_unpack_save(int* total_counter, int size_FB, int* need_more, ofstrea
 
   if (*need_more == 0){
     *dead_processes += 1;
-    // cout << "We are here" << endl;
+    cout << "We are here" << endl;
   }
+  cout << "We are not here" << endl;
 
 
   delete [] packed_smooth_nums_m;
-  delete [] relations_storage[0];
-  delete [] relations_storage;
+  free(relations_storage[0]);
+  free(relations_storage);
 
   // cout << location << endl;
 }
@@ -276,6 +277,7 @@ void worker_sieves(int** power_storage, int* counter, int block_size, mpz_t N, m
 //step where we repeatedly divide until we have the required number of relations
 void sieving_step(prime_element *FB, mpz_t N, int fbs, int rank, MPI_Status status, int block_size, int num_proc){
 
+
   //intialize values and recompute value for T
   mpz_t T, T_hold, poly, Tsq, res;
   int size_FB = fbs;
@@ -318,6 +320,9 @@ void sieving_step(prime_element *FB, mpz_t N, int fbs, int rank, MPI_Status stat
     mpz_set(T_hold, T);
 
     while (continue_sieving == 1){
+
+        cout << "Sieve start" << endl;
+
         int** relations;
         int counter = 0;
         int relations_amt = 0;
@@ -354,8 +359,8 @@ void sieving_step(prime_element *FB, mpz_t N, int fbs, int rank, MPI_Status stat
           delete[] power_storage[i];
         }
         delete[] power_storage;
-        delete [] relations[0];  // remove the pool
-        delete [] relations;     // remove the pointers
+        free(relations[0]);  // remove the pool
+        free(relations);     // remove the pointers
         delete [] smooth_nums;
 
         int offset = block_size * (num_proc - 1);
@@ -363,6 +368,7 @@ void sieving_step(prime_element *FB, mpz_t N, int fbs, int rank, MPI_Status stat
         mpz_add_ui(T, T, offset);
         mpz_set(T_hold, T);
         MPI_Recv(&continue_sieving, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, &status);
+        cout << continue_sieving << endl;
       }
     }
   }
@@ -394,7 +400,7 @@ void worker_pack_send(int* relations_amt, int size_FB, int** relations, string* 
 
 
   delete[] packed;
-  delete[] packed_length;
+  delete packed_length;
 
 
 }
