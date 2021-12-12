@@ -37,7 +37,7 @@ int main(int argc, char *argv[]){
     unsigned int rank = 0;
     unsigned long num_proc = 0;
     MPI_Status status;
-    int block_size = 6000;
+    int block_size = 32000;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, (int*) &num_proc);
@@ -186,13 +186,7 @@ void master_unpack_save(int* total_counter, int size_FB, int* need_more, ofstrea
       expo_matrix_file << endl;
       bit_matrix_file << endl;
     }
-    // cout << "Here" << endl;
   }
-
-
-  // cout << "Wrote in" << endl;
-
-
 
   // STEP 3
   MPI_Recv(&packed_str_length, 1, MPI_INT, location, 0, MPI_COMM_WORLD, &status);
@@ -201,11 +195,13 @@ void master_unpack_save(int* total_counter, int size_FB, int* need_more, ofstrea
   MPI_Recv(&packed_smooth_nums_m[0], packed_str_length, MPI_CHAR, location, 0, MPI_COMM_WORLD, &status);
   // cout << "got strs" << endl;
 
-  for (int i = 0; i < packed_str_length; i++){
-    if (packed_smooth_nums_m[i] != '|' && packed_smooth_nums_m[i] != '\0') {
-      smooth_num_file << packed_smooth_nums_m[i];
-    } else if (packed_smooth_nums_m[i] == '|') {
-      smooth_num_file << endl;
+  if (*need_more == 1){
+    for (int i = 0; i < packed_str_length; i++){
+      if (packed_smooth_nums_m[i] != '|' && packed_smooth_nums_m[i] != '\0') {
+        smooth_num_file << packed_smooth_nums_m[i];
+      } else if (packed_smooth_nums_m[i] == '|') {
+        smooth_num_file << endl;
+      }
     }
   }
 
@@ -260,6 +256,10 @@ void worker_sieves(int** power_storage, int* counter, int block_size, mpz_t N, m
       }
       if (init2 < block_size + 1){
           prime_divide(SI, power_storage, block_size, size_FB, init2, step, counter, i);
+      }
+
+      if(*counter >= size_FB + 10){
+        break;
       }
     }
 

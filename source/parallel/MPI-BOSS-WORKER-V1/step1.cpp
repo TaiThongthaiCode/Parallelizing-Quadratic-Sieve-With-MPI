@@ -41,17 +41,21 @@ int main(int argc, char *argv[]){
 
     //Size of Factorbase to be allocated depending on the number of digits
     int fbs, l;
-    fbs = 2.93*(size*size) - 1.64*size  + 2455;
+    // fbs = 2.93*(size*size) - 1.64*size  + 2455;
 
-    // if (size < 10) {
-    //   fbs = 150;
-    // } else if (size < 50) {
-    //   fbs = 500;
-    // } else if (size < 75) {
-    //   fbs = 2000;
-    // } else {
-    //   fbs = 60000;
-    // }
+    if (size < 10) {
+      fbs = 150;
+    } else if (size < 20) {
+      fbs = 300;
+    } else if (size < 30) {
+      fbs = 600;
+    } else if (size < 40){
+      fbs = 1200;
+    } else if (size < 50){
+      fbs = 2400;
+    } else {
+      fbs = 3200;
+    }
 
     //approximation for upper bound on the fbs-th largest prime and allocation of array to store factor base
     l = 2*fbs*log(2*fbs);
