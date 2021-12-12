@@ -23,10 +23,19 @@ Tai Thongthai and Tarang Saluja
 
 int main(int argc, char *argv[]){
 
+    if (argc != 2) {
+      cout << "Wrong amount of arguments. Please enter desired N" << endl;
+      exit(1);
+    } 
+
+    char* pq = argv[1];
+
+    cout << "step2 now running for N="<<pq << endl;
+
     //Set value of N
     mpz_t N;
     mpz_init(N);
-    mpz_set_str(N, "18567078082619935259", 10);
+    mpz_set_str(N, pq, 10);
 
     size_t j = mpz_sizeinbase (N, 10);
     int size = static_cast<int>(j);
@@ -58,6 +67,8 @@ int main(int argc, char *argv[]){
 
     //Write complete columns as rows into a text file
     sieving_step(FB, N, fbs, pes);
+    cout << "step2 done running for N="<<pq << endl << endl;
+
 
     return 0;
 }
