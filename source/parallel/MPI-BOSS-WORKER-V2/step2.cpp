@@ -198,8 +198,8 @@ void master_unpack_save(int size_FB, ofstream& expo_matrix_file, ofstream& bit_m
 
   delete [] smooth_nums_storage;
   delete [] str;
-  delete [] relations_storage[0];
-  delete [] relations_storage;
+  //free(relations_storage[0]);
+  free(relations_storage);
 }
 
 
@@ -249,6 +249,10 @@ void sieving_step(prime_element *FB, mpz_t N, int fbs, int rank, MPI_Status stat
 
    string* all_smooth = new string[max_relations];
    int** all_relations;
+   int** relations;
+   string* smooth_nums;
+   int** power_storage;
+
    all_relations = alloc_2d_int(max_relations, size_FB);
 
    int block_offset = (rank - 1)*block_size;
@@ -258,11 +262,9 @@ void sieving_step(prime_element *FB, mpz_t N, int fbs, int rank, MPI_Status stat
    int counter = 0;
 
    while (tot_relations < max_relations){
-     int** relations;
-     string* smooth_nums;
-     int relations_amt = 0;
 
-     int** power_storage = new int*[size_FB+1];
+     int relations_amt = 0;
+     power_storage = new int*[size_FB+1];
      for (int i = 0; i < size_FB+1; i++){
        power_storage[i] = new int[block_size];
        for (int j = 0; j< block_size; j++){
@@ -277,27 +279,42 @@ void sieving_step(prime_element *FB, mpz_t N, int fbs, int rank, MPI_Status stat
 
      worker_sieves(power_storage, &counter, block_size, N, T, size_FB, FB, &relations_amt, rank, SI, max_relations);
 
-      smooth_nums = new string[relations_amt];
-      relations = alloc_2d_int(relations_amt, size_FB);
+     if (relations_amt > 0){
+       smooth_nums = new string[relations_amt];
+       relations = alloc_2d_int(relations_amt, size_FB);
 
-      reduce_and_transpose(smooth_nums, relations, power_storage, block_size, size_FB, SISAVE);
+       reduce_and_transpose(smooth_nums, relations, power_storage, block_size, size_FB, SISAVE);
 
-      update_total(all_smooth, all_relations, max_relations, &tot_relations, size_FB, relations, smooth_nums, relations_amt);
+       update_total(all_smooth, all_relations, max_relations, &tot_relations, size_FB, relations, smooth_nums, relations_amt);
+
+       delete [] smooth_nums;
+
+       free(relations[0]);
+       free(relations);
+     }
+
 
       int offset = block_size * (num_proc - 1);
       mpz_add_ui(T, T, offset);
       mpz_set(T_hold, T);
 
-      delete [] smooth_nums;
-      delete [] relations[0];
-      delete [] relations;
+      for (int i = 0; i < size_FB+1; i ++){
+        delete [] power_storage[i];
+      }
+      delete [] power_storage;
+
+      delete [] SI;
+      delete [] SISAVE;
+
+
    }
 
    worker_pack_send(tot_relations, size_FB, all_relations, all_smooth);
 
    delete [] all_smooth;
-   delete [] all_relations[0];
-   delete [] all_relations;
+   free(all_relations[0]);
+   free(all_relations);
+
   }
 }
 
@@ -319,6 +336,7 @@ void worker_pack_send(int tot_relations, int size_FB, int** all_relations, strin
      ret = MPI_Send(packed_length, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
      ret = MPI_Send(&packed[0], *packed_length, MPI_CHAR, 0, 0, MPI_COMM_WORLD);
 
+     delete packed_length;
      delete[] packed;
 }
 

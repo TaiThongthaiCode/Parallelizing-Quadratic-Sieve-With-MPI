@@ -37,7 +37,7 @@ int main(int argc, char *argv[]){
     unsigned int rank = 0;
     unsigned long num_proc = 0;
     MPI_Status status;
-    int block_size = 3;
+    int block_size = 32000;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, (int*) &num_proc);
@@ -217,12 +217,14 @@ void master_unpack_save(int* total_counter, int size_FB, int* need_more, ofstrea
 
   if (*need_more == 0){
     *dead_processes += 1;
-    cout << "We are here" << endl;
   }
-  cout << "We are not here" << endl;
+
 
 
   delete [] packed_smooth_nums_m;
+  // delete [] relations_storage[0];
+  // delete [] relations_storage;
+
   free(relations_storage[0]);
   free(relations_storage);
 
@@ -319,15 +321,20 @@ void sieving_step(prime_element *FB, mpz_t N, int fbs, int rank, MPI_Status stat
     mpz_add_ui(T, T, block_offset);
     mpz_set(T_hold, T);
 
+    polynomial_element * SI;
+    polynomial_element * SI_SAVE;
+    int** power_storage;
+    int** relations;
+    string* smooth_nums;
+    int counter = 0;
+    int relations_amt;
+
+
     while (continue_sieving == 1){
+      relations_amt = 0;
 
-        cout << "Sieve start" << endl;
 
-        int** relations;
-        int counter = 0;
-        int relations_amt = 0;
-        int** power_storage = new int*[size_FB+1];
-        string* smooth_nums;
+        power_storage = new int*[size_FB+1];
 
         for (int i = 0; i < size_FB+1; i++){
           power_storage[i] = new int[block_size];
@@ -336,39 +343,46 @@ void sieving_step(prime_element *FB, mpz_t N, int fbs, int rank, MPI_Status stat
           }
         }
 
-        polynomial_element * SI = generate_sieving_interval(N, block_size, T);
+        SI = generate_sieving_interval(N, block_size, T);
         mpz_set(T, T_hold);
-        polynomial_element * SI_SAVE = generate_sieving_interval(N, block_size, T);
+        SI_SAVE = generate_sieving_interval(N, block_size, T);
         mpz_set(T, T_hold);
 
         // cout << "Time to sieve!" << endl;
         worker_sieves(power_storage, &counter, block_size, N, T, size_FB, FB, &relations_amt, rank, SI);
 
+        if (relations_amt > 0){
+          relations = alloc_2d_int(relations_amt, size_FB);
+          smooth_nums = new string[relations_amt];
 
-        relations = alloc_2d_int(relations_amt, size_FB);
-        smooth_nums = new string[relations_amt];
+          reduce_and_transpose(smooth_nums, relations, power_storage, block_size, size_FB, SI_SAVE);
 
+          worker_pack_send(&relations_amt, size_FB, relations, smooth_nums);
 
+          // delete [] relations[0];
+          // delete [] relations;
+          free(relations[0]);
+          free(relations);
 
-        reduce_and_transpose(smooth_nums, relations, power_storage, block_size, size_FB, SI_SAVE);
+          delete [] smooth_nums;
 
-        worker_pack_send(&relations_amt, size_FB, relations, smooth_nums);
+          MPI_Recv(&continue_sieving, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, &status);
+        }
 
+        delete [] SI;
+        delete [] SI_SAVE;
 
         for (int i = 0; i < size_FB + 1; i++){
           delete[] power_storage[i];
         }
         delete[] power_storage;
-        free(relations[0]);  // remove the pool
-        free(relations);     // remove the pointers
-        delete [] smooth_nums;
+
 
         int offset = block_size * (num_proc - 1);
 
         mpz_add_ui(T, T, offset);
         mpz_set(T_hold, T);
-        MPI_Recv(&continue_sieving, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, &status);
-        cout << continue_sieving << endl;
+
       }
     }
   }

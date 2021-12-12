@@ -26,7 +26,7 @@ int main(int argc, char *argv[]){
     if (argc != 2) {
       cout << "Wrong amount of arguments. Please enter desired N" << endl;
       exit(1);
-    } 
+    }
 
     char* pq = argv[1];
 
@@ -179,7 +179,7 @@ void sieving_step(prime_element *FB, mpz_t N, int fbs, int pes){
   mpz_t T, T_hold, p, a, b, min1, min2;
   int size_FB = fbs;
   int size_SI = pes;
-  int size_SSI = 80000;
+  int size_SSI = 32000;
   int power;
 
   unsigned long int init1, init2, step;
@@ -258,8 +258,8 @@ void sieving_step(prime_element *FB, mpz_t N, int fbs, int pes){
     write_to_file(smooth_num_store, power_matrix_store, bit_matrix_store,
                   size_SSI, size_FB, power_storage, SI_SAVE);
 
-    delete SI;
-    delete SI_SAVE;
+    delete[] SI;
+    delete[] SI_SAVE;
 
     mpz_add_ui(T, T, size_SSI);
     mpz_set(T_hold, T);
