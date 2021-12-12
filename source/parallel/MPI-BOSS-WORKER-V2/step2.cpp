@@ -43,7 +43,7 @@ int main(int argc, char *argv[]){
 
     //current size of sieving interval
     //int pes = 386*size*size -23209.3*size + 2352768;
-    block_size = 32000;
+    block_size = 800;
 
     int relation_count = 0;
 
@@ -267,7 +267,7 @@ void sieving_step(prime_element *FB, mpz_t N, int fbs, int rank, MPI_Status stat
      polynomial_element * SISAVE = generate_sieving_interval(N, block_size, T);
      mpz_set(T, T_hold);
 
-     worker_sieves(power_storage, &counter, block_size, N, T, size_FB, FB, &relations_amt, rank, SI);
+     worker_sieves(power_storage, &counter, block_size, N, T, size_FB, FB, &relations_amt, rank, SI, max_relations);
 
       smooth_nums = new string[relations_amt];
       relations = alloc_2d_int(relations_amt, size_FB);
@@ -331,7 +331,7 @@ void update_total(string* all_smooth, int** all_relations, int max_relations, in
 }
 
 
-void worker_sieves(int** power_storage, int* counter, int block_size, mpz_t N, mpz_t T, int size_FB, prime_element* FB, int* relations_amt, int rank, polynomial_element* SI){
+void worker_sieves(int** power_storage, int* counter, int block_size, mpz_t N, mpz_t T, int size_FB, prime_element* FB, int* relations_amt, int rank, polynomial_element* SI, int max_relations){
   mpz_t p, a, b, r, idx, min1, min2;
   mpz_init(p);
   mpz_init(a);
@@ -360,6 +360,11 @@ void worker_sieves(int** power_storage, int* counter, int block_size, mpz_t N, m
       if (init2 < block_size + 1){
           prime_divide(SI, power_storage, block_size, size_FB, init2, step, counter, i);
       }
+
+      if(*counter >= max_relations){
+        break;
+      }
+
     }
 
 

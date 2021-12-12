@@ -37,7 +37,7 @@ void reduce_and_transpose(string* smooth_nums, int** relations, int** power_stor
 string pack(int* string_length, string* smooth_nums, int relations_amt);
 
 void master_unpack_save(int size_FB, ofstream& expo_matrix_file, ofstream& bit_matrix_file, ofstream& smooth_num_file);
-void worker_sieves(int** power_storage, int* counter, int block_size, mpz_t N, mpz_t T, int size_FB, prime_element* FB, int* relations_amt, int rank, polynomial_element* SI);
+void worker_sieves(int** power_storage, int* counter, int block_size, mpz_t N, mpz_t T, int size_FB, prime_element* FB, int* relations_amt, int rank, polynomial_element* SI, int max_relations);
 void update_total(string* all_smooth, int** all_relations, int max_relations, int* tot_relations, int size_FB, int** relations, string*smooth_nums, int relations_amt);
 void worker_pack_send(int tot_relations, int size_FB, int** all_relations, string* all_smooth);
 //void solve_matrix();
