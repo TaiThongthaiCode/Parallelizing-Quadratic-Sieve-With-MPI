@@ -28,7 +28,7 @@ int main(int argc, char *argv[]){
     unsigned int rank = 0;
     unsigned long num_proc = 0;
     MPI_Status status;
-    int block_size = 3200;
+    int block_size = 6000;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, (int*) &num_proc);
@@ -161,10 +161,11 @@ void master_unpack_save(int* total_counter, int size_FB, int* need_more, ofstrea
   *total_counter += new_relations;
   location = status.MPI_SOURCE;
   size = new_relations * size_FB;
-  relations_storage = alloc_2d_int(size_FB, new_relations);
+  relations_storage = alloc_2d_int(new_relations, size_FB);
 
   //STEP 2 REC
   MPI_Recv(&relations_storage[0][0], size, MPI_INT, location, 0, MPI_COMM_WORLD, &status);
+
   if (*need_more == 1){
     for (int i = 0; i < new_relations; i++){
       for (int j = 0; j < size_FB; j++){
@@ -175,7 +176,9 @@ void master_unpack_save(int* total_counter, int size_FB, int* need_more, ofstrea
       expo_matrix_file << endl;
       bit_matrix_file << endl;
     }
+    cout << "Here" << endl;
   }
+
 
   cout << "Wrote in" << endl;
 
