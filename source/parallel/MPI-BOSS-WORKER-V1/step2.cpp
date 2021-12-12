@@ -25,6 +25,15 @@ Tai Thongthai and Tarang Saluja
 
 
 int main(int argc, char *argv[]){
+
+    if (argc != 2) {
+      cout << "Wrong amount of arguments. Please enter desired N" << endl;
+      exit(1);
+    }
+
+    char* pq = argv[1];
+    // cout << "Step2 now running for N=" << pq << endl;
+
     unsigned int rank = 0;
     unsigned long num_proc = 0;
     MPI_Status status;
@@ -36,7 +45,7 @@ int main(int argc, char *argv[]){
     //Set value of N
     mpz_t N;
     mpz_init(N);
-    mpz_set_str(N, "6059", 10);
+    mpz_set_str(N, pq, 10);
     prime_element * FB;
 
     int relation_count = 0;
@@ -60,6 +69,7 @@ int main(int argc, char *argv[]){
     sieving_step(FB, N, fbs, rank, status, block_size, num_proc);
 
     MPI_Finalize();
+    // cout << "Step2 now running for N=" << pq << endl;
     return 0;
 }
 
@@ -176,20 +186,20 @@ void master_unpack_save(int* total_counter, int size_FB, int* need_more, ofstrea
       expo_matrix_file << endl;
       bit_matrix_file << endl;
     }
-    cout << "Here" << endl;
+    // cout << "Here" << endl;
   }
 
 
-  cout << "Wrote in" << endl;
+  // cout << "Wrote in" << endl;
 
 
 
   // STEP 3
   MPI_Recv(&packed_str_length, 1, MPI_INT, location, 0, MPI_COMM_WORLD, &status);
-  cout << "got length" << endl;
+  // cout << "got length" << endl;
   packed_smooth_nums_m = new char[packed_str_length];
   MPI_Recv(&packed_smooth_nums_m[0], packed_str_length, MPI_CHAR, location, 0, MPI_COMM_WORLD, &status);
-  cout << "got strs" << endl;
+  // cout << "got strs" << endl;
 
   for (int i = 0; i < packed_str_length; i++){
     if (packed_smooth_nums_m[i] != '|' && packed_smooth_nums_m[i] != '\0') {
@@ -207,11 +217,11 @@ void master_unpack_save(int* total_counter, int size_FB, int* need_more, ofstrea
 
   MPI_Send(need_more, 1, MPI_INT, location, 0, MPI_COMM_WORLD);
 
-  cout << location << endl;
+  // cout << location << endl;
 
   if (*need_more == 0){
     *dead_processes += 1;
-    cout << "We are here" << endl;
+    // cout << "We are here" << endl;
   }
 
 
@@ -219,7 +229,7 @@ void master_unpack_save(int* total_counter, int size_FB, int* need_more, ofstrea
   delete [] relations_storage[0];
   delete [] relations_storage;
 
-  cout << location << endl;
+  // cout << location << endl;
 }
 
 void worker_sieves(int** power_storage, int* counter, int block_size, mpz_t N, mpz_t T, int size_FB, prime_element* FB, int* relations_amt, int rank, polynomial_element* SI){
@@ -326,7 +336,7 @@ void sieving_step(prime_element *FB, mpz_t N, int fbs, int rank, MPI_Status stat
         polynomial_element * SI_SAVE = generate_sieving_interval(N, block_size, T);
         mpz_set(T, T_hold);
 
-        cout << "Time to sieve!" << endl;
+        // cout << "Time to sieve!" << endl;
         worker_sieves(power_storage, &counter, block_size, N, T, size_FB, FB, &relations_amt, rank, SI);
 
 
@@ -377,10 +387,10 @@ void worker_pack_send(int* relations_amt, int size_FB, int** relations, string* 
   packed = new char[*packed_length];
   strcpy(packed, packed_smooth_nums.c_str());
   ret = MPI_Send(packed_length, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
-  cout << "sent length" << endl;
-  cout << *packed_length << endl;
+  // cout << "sent length" << endl;
+  // cout << *packed_length << endl;
   ret = MPI_Send(&packed[0], *packed_length, MPI_CHAR, 0, 0, MPI_COMM_WORLD);
-  cout << "sent strs" << endl;
+  // cout << "sent strs" << endl;
 
 
   delete[] packed;

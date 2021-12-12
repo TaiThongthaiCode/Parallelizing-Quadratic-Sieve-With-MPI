@@ -1,6 +1,8 @@
 make clean
 make
 
+# OUTFILE = results.txt
+
 declare -a arr=("1147"
                 "16621981"
                 "198729621539"
@@ -14,6 +16,6 @@ declare -a arr=("1147"
 
 for N in ${arr[@]}; do
   ./step1 $N
-  time ./step2 $N >> results.txt
-
+  echo -e "\n ==[N=$N]==" >> results.txt
+  (time ./step2 $N) &>> results.txt
 done

@@ -15,8 +15,8 @@ Tai Thongthai and Tarang Saluja
 #include <gmp.h>
 #include <stdarg.h>
 #include <obstack.h>
-#include <curlpp/cURLpp.hpp>
-#include <curlpp/Options.hpp>
+// #include "curlpp-0.8.1/src/curlpp/cURLpp.cpp"
+// #include "curlpp-0.8.1/src/curlpp/Options.cpp"
 
 #include "step1.h"
 
@@ -45,7 +45,7 @@ int main(int argc, char *argv[]){
     //Size of Factorbase to be allocated depending on the number of digits
     int fbs, l;
     //fbs = 100;
-    //fbs = 2.93*(size*size) - 1.64*size  + 2455;
+    fbs = 2.93*(size*size) - 1.64*size  + 2455;
     // if (size < 10) {
     //   fbs = 150;
     // } else if (size < 50) {
@@ -56,11 +56,11 @@ int main(int argc, char *argv[]){
     //   fbs = 60000;
     // }
 
-    curlpp::Cleanup myCleanup;
-    std::ostringstream os;
-    os << curlpp::options::Url(std::string("http://127.0.0.1:5000/69"));
-    string fbs_s = os.str();
-    fbs = atoi(fbs_s)
+    // curlpp::Cleanup myCleanup;
+    // std::ostringstream os;
+    // os << curlpp::options::Url(std::string("http://127.0.0.1:5000/69"));
+    // string fbs_s = os.str();
+    // fbs = atoi(fbs_s)
 
     //approximation for upper bound on the fbs-th largest prime and allocation of array to store factor base
     l = 2*fbs*log(2*fbs);

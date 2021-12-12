@@ -30,7 +30,7 @@ int main(int argc, char *argv[]){
 
     char* pq = argv[1];
 
-    cout << "step2 now running for N="<<pq << endl;
+    //cout << "step2 now running for N="<<pq << endl;
 
     //Set value of N
     mpz_t N;
@@ -67,7 +67,7 @@ int main(int argc, char *argv[]){
 
     //Write complete columns as rows into a text file
     sieving_step(FB, N, fbs, pes);
-    cout << "step2 done running for N="<<pq << endl << endl;
+    //cout << "step2 done running for N="<<pq << endl << endl;
 
 
     return 0;
