@@ -51,7 +51,7 @@ int main(int argc, char *argv[]){
 
     //current size of sieving interval
     //int pes = 386*size*size -23209.3*size + 2352768;
-    block_size = 32000;
+    block_size = 16000;
 
     int relation_count = 0;
 

@@ -42,7 +42,7 @@ int main(int argc, char *argv[]){
 
     //current size of sieving interval
     //int pes = 386*size*size -23209.3*size + 2352768;
-    int pes = 32000;
+    int pes = 16000;
     int fbs;
     int relation_count = 0;
 

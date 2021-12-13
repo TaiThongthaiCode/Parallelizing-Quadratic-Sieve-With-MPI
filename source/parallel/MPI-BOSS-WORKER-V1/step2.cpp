@@ -37,7 +37,7 @@ int main(int argc, char *argv[]){
     unsigned int rank = 0;
     unsigned long num_proc = 0;
     MPI_Status status;
-    int block_size = 32000;
+    int block_size = 16000;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, (int*) &num_proc);
