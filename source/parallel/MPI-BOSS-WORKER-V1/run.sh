@@ -3,18 +3,18 @@ make
 
 # OUTFILE = results.txt
 
-declare -a arr=("1147"
-                "16621981"
-                "198729621539"
-                "2516160469693133"
+declare -a arr=(
+                # "1147"
+                # "16621981"
+                # "198729621539"
+                # "2516160469693133"
                 "18567078082619935259"
                 "6993666669337710100100501"
                 "812945258035564110179904496619"
                 "31015750616613538167589387786383061"
                 "99887766532235934110673400915598003333"
-                "8740616151424572261591492920109047657941"
+                # "8740616151424572261591492920109047657941"
                 )
-
 
 # for i in 2 3 5 9 17 33; do
 #   echo -e "\n *===[NP = $i]===*:" >> results.txt
@@ -26,14 +26,14 @@ declare -a arr=("1147"
 #   echo $i
 # done
 
-for epoch in 1 2 3 4 5; do
-  echo -e "\n *****[EPOCH $epoch]*****:" >> results.txt
+for epoch in 1 2 3 4; do
+  # echo -e "\n *****[EPOCH $epoch]*****:" >> results.txt
   for N in ${arr[@]}; do
-    echo -e "\n *===[N=$N]===*:" >> results.txt
+    # echo -e "\n *===[N=$N]===*:" >> results.txt
     ./step1 $N
     for i in 2 3 5 9 17 33; do
       echo "Now running for np=$i"
-      echo -e "\n ==[NP = $i]==:" >> results.txt
+      echo -e "E:$epoch:N:$N:P:$i" >> results.txt
       (time mpirun -np $i --hostfile hostfile_big ./step2 $N) &>> results.txt
     done
   done
