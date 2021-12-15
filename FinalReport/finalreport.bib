@@ -1,82 +1,260 @@
 % this is an example bibtex file, there are different types of entries
 % each with different format requirements
-% the most commonly used are book, inproceedings, article, and misc 
+% the most commonly used are book, inproceedings, article, and misc
 % annotate is used to add comments about the work to the .bib file
-% entries (its contents will not show up in the References section) 
+% entries (its contents will not show up in the References section)
 % see http://www.bibtex.org/ for lots more information
-
-
 % not every field of each style of entry is required, but author, title,
 % year, and some specification of how it is published is required for
 % most formats  (I could remove month here, for example)
 % anything I put in { } will be translated as is (this is how I can
 % force capitaliziation), anything in "" will be capitalize based on
 % the whim of bibtex
-@INPROCEEDINGS{newhall:nswap2L, 
-  author = "Tia Newhall and Douglas Woos",
-  title = "Incorporating Network {RAM} and Flash into Fast Backing Store 
-  for Clusters",
-  booktitle = "{IEEE} Cluster Conference", 
-  MONTH = September,
-  year = 2011
-} 
+@ARTICLE{asbrink:parallelqs,
+  author = "Olof Asbrink and Joel Brynielsson",
+  title = "Factoring large integers using parallel Quadratic Sieve",
+  YEAR = "1998",
+  MONTH = "March",
+  JOURNAL = "https://www.csc.kth.se/~joel/qs.pdf",
+  ANNOTE = ""
 
-@MISC {bulatov:HYP,
-        AUTHOR = "Vladimir Bulatov",
-        TITLE = "Hyper{P}rof - hyperbolic profile browser for {J}ava",
-        HOWPUBLISHED = "http://pc153.mt.ic.ac.uk/Bulatov/HyperProf/",
-        ANNOTE =  "visualization for Java -prof output, based on 
-          Poincarte's 2-D model of hyperbolic space.
-          "
 }
 
-@MISC {newhall:help,
-        AUTHOR = "Tia Newhall",
-        TITLE = "{CS} and {U}nix Help Pages",
-        HOWPUBLISHED = "\url{www.cs.swarthmore.edu/\~newhall/unixlinks.html}",
-        ANNOTE =  "
-          "
-}
-
-@BOOK {unixV,
-        KEY = "unixV",
-        AUTHOR = "AT\&T",
-        TITLE = "System {V} {I}nterface {D}efinition, {T}hird {E}dition",
-        PUBLISHER = {Addison-Wesley},
-        YEAR = 1989
-}
-
-
-@ARTICLE {armstrong:hotspot,
-        AUTHOR = "Eric Armstrong",
-        TITLE = "HotSpot: {A} new breed of virtual machine",
-        JOURNAL = "{JavaWorld}  http://www.javaworld.com/",
-        YEAR = 1998,
-        MONTH = March,
+@BOOK {hoffstein:cryptography,
+        KEY = "Cryptography",
+        AUTHOR = "Jeffrey Hoffstein, Jill Pipher, Joseph H. Silverman",
+        TITLE = "An Introduction to Mathematical Cryptography",
+        PUBLISHER = "Springer",
+        YEAR = "2014",
         ANNOTE =  ""
 }
 
-@TECHREPORT {metering,
-        KEY = "metering",
-        AUTHOR = "Mark Kantrowitz",
-        TITLE = "Portable {U}tilities for {C}ommon {L}isp, {U}ser {G}uide  and {
-I}mplementation {N}otes",
-        INSTITUTION = "{Carnegie Mellon University}",
-        NUMBER = "CMU-CS-91-143",
-        MONTH= "May",
-        YEAR = 1991,
+@ARTICLE {verma:cudampilanczos,
+        AUTHOR = "Prashant Verma Kapil Sharma",
+        TITLE = "GPU-Accelerated Optimization Of Block Lanczos Solver For Sparse Linear System",
+        JOURNAL = "International Journal of Scientific and Technology Research",
+        YEAR = "2020",
+        MONTH = "June",
+        ANNOTE =  ""
+}
+
+@MISC {lifchitz:rsa_break,
+        AUTHOR = "Renaud Lifchitz",
+        TITLE = "15 Ways to break RSA security",
+        HOWPUBLISHED = "\url{https://speakerdeck.com/rlifchitz/15-ways-to-break-rsa-security}",
+        ANNOTE =  ""
+}
+
+
+@ARTICLE {pomerance:tts,
+        AUTHOR = "Carl Pomerance",
+        TITLE = "A Tale of Two Sieves",
+        JOURNAL = "American Mathematical Society",
+        YEAR = "1996",
+        MONTH = "December",
+        ANNOTE =  ""
+}
+
+@ARTICLE {yang:wiedemann,
+        AUTHOR = "Laurance T. Yang, Gaoyuan Huang, Jun Feng, Li Xu",
+        TITLE = "Parallel GNFS algorithm integrated with parallel block Wiedemann algorithm for RSA security in cloud computing",
+        JOURNAL = "Information Sciences",
+        YEAR = "2017",
+        MONTH = "May",
+        ANNOTE =  ""
+}
+
+
+@ARTICLE {kim:simdQS,
+        AUTHOR = "Yang-Hee Kim",
+        TITLE = "Parallel Factorization using Quadratic Sieve Algorithm on SIMD machines",
+        JOURNAL = "Korea Information Processing Society",
+        YEAR = "2001",
+        MONTH = "March",
         ANNOTE =  "
-           Profiling tool for Lisp programs
-           works by annotating code with a specification of which functions
-           to monitor
-           can provide inclusive and exclusive timing information, number of
-           calls, cons per call, and adjust times with an estimate of total
-           timing overhead, plus the an estimate of timing overhead is
-           subtracted from each function time
-	"
+          "
+}
+
+@ARTICLE {ghemawat:googlemapreduce,
+        AUTHOR = "Sanjay Ghemawat and Jeffrey Dean",
+        TITLE = "Sixth Symposium on Operating System Design and Implementation",
+        JOURNAL = "Google",
+        YEAR = "2004",
+        MONTH = "Unknown",
+        ANNOTE =  "
+          "
 }
 
 
 
+@ARTICLE {tordable:intmapreduce,
+        AUTHOR = "Javier Tordable",
+        TITLE = "MapReduce For Integer Factorization",
+        JOURNAL = "arXiv",
+        YEAR = "2010",
+        MONTH = "January",
+        ANNOTE =  "
+          "
+}
+
+@ARTICLE {nguyen:hadoop,
+        AUTHOR = "Son T. Nguyen Semere Tsehaye Ghebregiorgish Nour Alabbasi and Chunming Rong",
+        TITLE = "Integer Factorization Using Hadoop",
+        JOURNAL = "International Conference on Cloud Computing Technology and Science",
+        YEAR = "2012",
+        MONTH = "January",
+        ANNOTE =  "
+          "
+}
+
+@ARTICLE {ying:improvedlanczos,
+        AUTHOR = "Wenjuan Ying",
+        TITLE = "An Improved Block Lanczos Algorithm to Solve Large and Sparse Matrixes on GPUs",
+        JOURNAL = "Ninth International Conference on Computional Intelligence and Security",
+        YEAR = "2013",
+        MONTH = "December",
+        ANNOTE =  "
+          "
+}
+
+@ARTICLE {sengupta:simdparallel,
+        AUTHOR = "Binanda Sengupta and Abhijit Das",
+        TITLE = "Use of SIMD-based data parallelism to speed up sieving in integer-factoring algorithms",
+        JOURNAL = "Applied Mathematic and Computation",
+        YEAR = "2017",
+        MONTH = "January",
+        ANNOTE =  "
+          "
+}
 
 
+@ARTICLE {jahenbaksh:mpiQS,
+        AUTHOR = "Kazem Jahenbakhsh and Jason Papadopoulos",
+        TITLE = "An Efficient Parallel Implementation of Self Initialization Quadratic Sieve for Integer Factorizations Using Message Passing Interface (MPI)",
+        JOURNAL = "Proceedings of 14th Iranian Conference on Electrical Engineering",
+        YEAR = "2006",
+        MONTH = "May",
+        ANNOTE =  ""
+}
+
+@ARTICLE {collins:euclid,
+        AUTHOR = "GEORGE E. COLLINS",
+        TITLE = "A Fast Euclidean Algorithm for Gaussian Integers",
+        JOURNAL = "Symbolic Computation",
+        YEAR = "2002",
+        MONTH = "April",
+        ANNOTE =  ""
+}
+
+@ARTICLE {silverman:mpqs,
+        AUTHOR = "Robert Silverman",
+        TITLE = "The Multiple Polynomial Quadratic Sieve",
+        JOURNAL = "Mathematics of Computation",
+        YEAR = "1987",
+        MONTH = "January",
+        ANNOTE =  ""
+}
+
+
+@MISC {kraus:cudaawarempi,
+        AUTHOR = "Jiri Kraus",
+        TITLE = "An Introduction to CUDA-Aware MPI",
+        HOWPUBLISHED = "\url{https://developer.nvidia.com/blog/introduction-cuda-aware-mpi/}",
+        ANNOTE =  "
+          "
+}
+
+
+
+@MISC {wang:qsgpu,
+        AUTHOR = "Bayley Wang",
+        TITLE = "Quadratic Sieve on GPUs",
+        HOWPUBLISHED = "\url{http://courses.csail.mit.edu/18.337/2011/projects/Wang_report.pdf}",
+        ANNOTE =  "
+          "
+}
+
+@MISC {landquist:qs,
+        AUTHOR = "Eric Landquist",
+        TITLE = "The Quadratic Sieve Factoring Algorithm",
+        HOWPUBLISHED = "\url{https://www.cs.virginia.edu/crab/QFS_Simple.pdf}",
+        ANNOTE =  "
+          "
+}
+
+@MISC {archer:qsgpu,
+        AUTHOR = "Christopher Archer",
+        TITLE = "GPU Integer Factorisation with the Quadratic Sieve",
+        HOWPUBLISHED = "\url{https://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.468.5904&rep=rep1&type=pdf}",
+        ANNOTE =  "
+          "
+}
+
+@MISC {pavan:parallelgpu,
+        AUTHOR = "KV Krishna Pavan",
+        TITLE = "Parallel Cryptanalysis using NVidia GPUs",
+        HOWPUBLISHED = "\url{https://www.academia.edu/33287123/An_efficient_implementation_of_Quadratic_Sieve_Algorithm_on_GPUs}",
+        ANNOTE =  "
+          "
+}
+
+
+@MISC {papadopoulos:msieve,
+        AUTHOR = "Jason Papadopoulos",
+        TITLE = "A Library for Factoring Large Integers",
+        HOWPUBLISHED = "\url{https://github.com/radii/msieve}",
+        ANNOTE =  "
+          "
+}
+
+
+@MISC {bytopia:help,
+        AUTHOR = "bytopia",
+        TITLE = "A Parallel Implementation of the Quadratic Sieve Algorithm",
+        HOWPUBLISHED = "\url{https://www.bytopia.dk/qs/}",
+        ANNOTE =  "
+          "
+}
+
+
+@MISC {plimpton:mpimr,
+        AUTHOR = "Steve Plimpton and Karen Devine",
+        TITLE = "MapReduce-MPI Library",
+        HOWPUBLISHED = "\url{https://sjplimp.github.io/mapreduce/}",
+        ANNOTE =  ""
+}
+
+
+@BOOK {hoefler:mpimr,
+        KEY = "mpimr",
+        AUTHOR = "Torsten Hoefler, Andrew Lumsdaine, and Jack Dongarra",
+        TITLE = "Towards Efficient MapReduce Using MPI",
+        PUBLISHER = "Springer",
+        YEAR = "2009",
+        ANNOTE =  ""
+}
+
+@MISC {cohen:gaussian,
+        AUTHOR = "Vardit Cohen Brian Hillman and Kyle Suarez",
+        TITLE = "Linear Algebra: Gaussian Elimination",
+        HOWPUBLISHED = "\url{https://people.cs.rutgers.edu/~venugopa/parallel_summer2012/ge.html#mpi_ge}",
+        ANNOTE =  "
+          "
+}
+
+@ARTICLE {flesch:lanczos,
+        AUTHOR = "Ildiko Flesch",
+        TITLE = "A New Parallel Approach to the Block Lanczos Algorithm for Finding Nullspaces over GF(2)",
+        JOURNAL = "International Conference on High-Performance Computing",
+        YEAR = "2006",
+        ANNOTE =  "
+          "
+}
+
+@MISC {wozniak:lanczos,
+        AUTHOR = "Jan Wozniak",
+        TITLE = "lanczos parallel implementation",
+        HOWPUBLISHED = "\url{https://github.com/wozniakjan/KRY/tree/master/RSA/src/msieve/common/lanczos}",
+        ANNOTE =  "
+          "
+}
