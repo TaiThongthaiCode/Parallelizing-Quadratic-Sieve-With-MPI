@@ -33,12 +33,19 @@ def main():
                     temp.append(int(power))
             expo_matrix.append(temp)
 
-
+    good = True
+    errors = []
     for i in range(len(smooth_nums)):
         res = check(smooth_nums[i], expo_matrix[i], factorbase)
         if not res:
-            print("Error at", smooth_nums[i])
-    print("All good!")
+            errors.append("Error at"+ str(smooth_nums[i]))
+            good = False 
+
+    if good == True:
+        print("All good!")
+    else:
+        print("Errors at: ")
+        print(errors)
 
 def check(smooth, relation, factorbase):
 

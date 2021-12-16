@@ -4,13 +4,12 @@ def main():
     factorbase = []
     expo_matrix = []
 
-
     with open("Smooth_Num.txt") as sm_file:
         while True:
             line = sm_file.readline()
             if line == "":
                 break
-            smooth_nums.append(int(line))   
+            smooth_nums.append(int(line))
     sm_file.close()
 
     with open("factorbase.txt") as fb_file:
@@ -33,12 +32,19 @@ def main():
                     temp.append(int(power))
             expo_matrix.append(temp)
 
-
+    good = True
+    errors = []
     for i in range(len(smooth_nums)):
         res = check(smooth_nums[i], expo_matrix[i], factorbase)
         if not res:
-            print("Error at", smooth_nums[i])
-    print("All good!")
+            errors.append("Error at"+ str(smooth_nums[i]))
+            good = False
+
+    if good == True:
+        print("All good!")
+    else:
+        print("Errors at: ")
+        print(errors)
 
 def check(smooth, relation, factorbase):
 
@@ -47,14 +53,9 @@ def check(smooth, relation, factorbase):
         result *= factorbase[i]**relation[i]
 
     if result == smooth:
-        return True 
+        return True
     else:
         return False
-
-
-
-
-
 
 if __name__ == "__main__":
     main()
