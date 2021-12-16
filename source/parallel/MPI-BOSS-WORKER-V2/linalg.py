@@ -34,9 +34,9 @@ def main():
 
 
 
-    qs.transpose(bit_matrix)
-    bit_matrix.reverse()
-    smooth_nums.reverse()
+    # qs.transpose(bit_matrix)
+    # bit_matrix.reverse()
+    # smooth_nums.reverse()
     # print(smooth_nums)
 
 
