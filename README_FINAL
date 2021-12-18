@@ -1,0 +1,9 @@
+Write "make clean" and then "make" to clear old and build new executables. 
+
+Sequential:
+First run ./step1 N to run the first part of the algorithm. This should generate text files. Without clearing those textfiles, run ./step2 N to run the second part of the algorithm. Then the three resulting textfiles have the numbers which been factorized and the corresponding matrices (one with the powers of the primes for each factorization and another with those powers taken modulo 2). 
+
+Parallel:
+Same instructions, except use the command line arguments for numbers of processors and hostfile to run mpi. Some hostfiles are included. 
+
+
