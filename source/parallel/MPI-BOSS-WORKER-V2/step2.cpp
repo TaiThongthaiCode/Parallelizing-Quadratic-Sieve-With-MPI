@@ -2,6 +2,10 @@
 
 Tai Thongthai and Tarang Saluja
 
+This program takes in our factorbase file from step1, and
+generates the exponential matrix, bit matrix, finds the smooth_numbers,
+and writes them all to file.
+
 "Life is not a problem to be solved, but a reality to be experienced" -
  Benjamin Tennyson 10;
 
@@ -447,10 +451,6 @@ polynomial_element * generate_sieving_interval(mpz_t N, int block_size, mpz_t T)
     return SI;
 }
 
-
-
-
-
 /*
 Description: Function for worker to pack smooth_nums as strings and then
             send it to the boss node, using MPI_send
@@ -644,6 +644,8 @@ void reduce_and_transpose(string* smooth_nums, int** relations,
     }
   }
 }
+
+
 /*
 Description: Helper function for worker nodes sieve - packs smooth nums
               into a string to prepare for MPI send

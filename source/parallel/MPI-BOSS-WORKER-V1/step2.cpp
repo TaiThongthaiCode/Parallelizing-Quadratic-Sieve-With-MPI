@@ -2,6 +2,10 @@
 
 Tai Thongthai and Tarang Saluja
 
+This program takes in our factorbase file from step1, and
+generates the exponential matrix, bit matrix, finds the smooth_numbers,
+and writes them all to file.
+
 "Life is not a problem to be solved, but a reality to be experienced"
 - Benjamin Tennyson 10;
 
@@ -472,7 +476,6 @@ Params: (1) int pointer to relations amount
         (4) string pointer (array of strings) to smooth nums
 Return: Nothing
 */
-
 void worker_pack_send(int* relations_amt, int size_FB, int** relations,
   string* smooth_nums){
   string packed_smooth_nums;

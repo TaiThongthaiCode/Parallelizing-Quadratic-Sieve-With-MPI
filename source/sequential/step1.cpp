@@ -1,6 +1,9 @@
 /*
 Tai Thongthai and Tarang Saluja
 
+This program generates a factorbase, based on our key N, and writes
+it to file.
+
 "If I had 8 hours to chop a tree, I would spend the first 6 hours sharpening
  my axe" - Harlene Quinzell
 
@@ -94,6 +97,12 @@ int main(int argc, char *argv[]){
 /*
 Function which performs the sieve of erathosenes on the interval provided
 by [0, l]
+
+Inputs: (1) int l -> upper bound for the kth prime
+        (2) array of prime_elements
+        (3) int size of factorbase (unitialized)
+
+returns factorbase size. 
 */
 int getprimes(int l, mpz_t N, prime_element * primes, int fbs){
 
@@ -146,8 +155,8 @@ int getprimes(int l, mpz_t N, prime_element * primes, int fbs){
 }
 
 
-//Shank-Tonellis algorithm, taken verbatim from the Bytopia MPQS
-//implementation, we did not commment it is very complicated
+/*Shank-Tonellis algorithm, taken verbatim from the Bytopia MPQS
+implementation, we did not commment it is very complicated*/
 void shanktonellis(mpz_t N, prime_element *prime){
 
  int res_int;
@@ -168,6 +177,13 @@ void shanktonellis(mpz_t N, prime_element *prime){
 
 }
 
+
+/*
+Helper function for Tonellis Shanks. Taken verbatim from
+Bytopia MPQS implementation. We are unable to provide
+more comments, as we do not fully grasp the nature 
+of this function
+*/
 int mpz_sqrtm(mpz_ptr rop, mpz_t a, mpz_t q)
 {
   mpz_t g, temp, t, gInv, qDiv, h, b;

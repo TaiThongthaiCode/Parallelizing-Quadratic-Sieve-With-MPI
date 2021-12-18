@@ -4,7 +4,6 @@ make
 # OUTFILE = results.txt
 
 declare -a arr=(
-                # "1147"
                 # "16621981"
                 # "198729621539"
                 "2516160469693133"

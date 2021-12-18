@@ -2,6 +2,10 @@
 
 Tai Thongthai and Tarang Saluja
 
+This program takes in our key N and the factorbase file as input, a 
+generates an exponential matrix, a bit matrix, and finds
+smooth numbers, and writes them to file.
+
 "Life is not a problem to be solved, but a reality to be experienced"
 - Benjamin Tennyson 10;
 

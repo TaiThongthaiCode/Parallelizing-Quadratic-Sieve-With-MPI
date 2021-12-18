@@ -1,3 +1,9 @@
+"""
+This program checks the correctness of our QS implementation, based
+on the output of step1.cpp and step2.cpp
+
+Tai Thongthai and Tarang Saluja
+"""
 def main():
 
     smooth_nums = []
@@ -46,6 +52,15 @@ def main():
         print("Errors at: ")
         print(errors)
 
+"""
+This function checks whether a row in our exponential matrix
+correctly calculates its corresponding smooth number, given the factorbase
+
+Input: Takes in a single smooth number, a relation (exponential matrix row),
+and our factorbase 
+
+Returns true if it is correct. False otherwise
+"""
 def check(smooth, relation, factorbase):
 
     result = 1
