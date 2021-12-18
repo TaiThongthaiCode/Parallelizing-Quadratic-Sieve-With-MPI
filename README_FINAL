@@ -6,4 +6,5 @@ First run ./step1 N to run the first part of the algorithm. This should generate
 Parallel:
 Same instructions, except use the command line arguments for numbers of processors and hostfile to run mpi. Some hostfiles are included. 
 
+Sample values of N can be found int he run.sh files. 
 
