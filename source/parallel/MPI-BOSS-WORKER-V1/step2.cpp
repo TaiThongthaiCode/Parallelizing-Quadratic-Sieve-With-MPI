@@ -2,7 +2,8 @@
 
 Tai Thongthai and Tarang Saluja
 
-"Life is not a problem to be solved, but a reality to be experienced" - Benjamin Tennyson 10;
+"Life is not a problem to be solved, but a reality to be experienced"
+- Benjamin Tennyson 10;
 
 */
 
@@ -32,22 +33,24 @@ int main(int argc, char *argv[]){
     }
 
     char* pq = argv[1];
-    // cout << "Step2 now running for N=" << pq << endl;
 
     unsigned int rank = 0;
     unsigned long num_proc = 0;
     MPI_Status status;
     int block_size = 16000;
 
+    //initialize MPI
     MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, (int*) &num_proc);
     MPI_Comm_rank(MPI_COMM_WORLD, (int*) &rank);
+
     //Set value of N
     mpz_t N;
     mpz_init(N);
     mpz_set_str(N, pq, 10);
     prime_element * FB;
 
+    //count total number of relations
     int relation_count = 0;
 
     //grab size of factor base from file
@@ -69,7 +72,6 @@ int main(int argc, char *argv[]){
     sieving_step(FB, N, fbs, rank, status, block_size, num_proc);
 
     MPI_Finalize();
-    // cout << "Step2 now running for N=" << pq << endl;
     return 0;
 }
 
@@ -130,22 +132,23 @@ prime_element * load(mpz_t N, int fbs){
 /*
 Description: step where we repeatedly divide our sieving interval using our
               prime factor base until we have the required number of relations
-              and writing the relevant data to file. Rank 1 is the boss node, and
-              all other ranks are the worker nodes. Only the workers sieve, the
-              boss compiles results
+              and writing the relevant data to file. Rank 1 is the boss node,
+               and all other ranks are the worker nodes. Only the workers sieve,
+                the boss compiles results
 Params: (1) Pointer to prime_element array (the factorbase);
         (2) mpz_t N;
         (3) int factorbasesize (fbs);
         (4) int rank of the current node
         (5) MPI_Status object, status
-        (6) int block_size: the chunk size that we generate our temporary sieving
-                            sub intervals on
+        (6) int block_size: the chunk size that we generate our temporary
+         sieving sub intervals on
         (7) int num_proc: the number of processes allocated
 Return: Nothing
 Output [All Text Files]: (1) Power_Matrix.txt (matrix representation of
                               prime powers of found relations);
                           (2) Bit_Matrix.txt (Power_Matrix mod 2);
-                          (3) Smooth_Numbers.txt (Numbers we have found to be smooth)
+                          (3) Smooth_Numbers.txt (Numbers we have found to be
+                          smooth)
 */
 void sieving_step(prime_element *FB, mpz_t N, int fbs, int rank,
                   MPI_Status status, int block_size, int num_proc){
@@ -157,10 +160,11 @@ void sieving_step(prime_element *FB, mpz_t N, int fbs, int rank,
   int continue_sieving = 1;
   int power, size;
 
+  //Boss loop
   if (rank == 0){
-    int need_more = 1;
-    int dead_processes = 0;
-    int total_counter = 0;
+    int need_more = 1; //1 meeans more relations needed, 0 means enough
+    int dead_processes = 0; //counting number of processes dead
+    int total_counter = 0; //counting total number of relations
 
     ofstream smooth_num_file;
     smooth_num_file.open ("Smooth_Num.txt");
@@ -169,6 +173,8 @@ void sieving_step(prime_element *FB, mpz_t N, int fbs, int rank,
     ofstream bit_matrix_file;
     bit_matrix_file.open("Bit_Matrix.txt");
 
+    //while proceeses still alive, call function for boss to unpack and
+    //save what is sent
     while (dead_processes < num_proc - 1){
       master_unpack_save(&total_counter, size_FB, &need_more,
                         expo_matrix_file, bit_matrix_file,
@@ -202,11 +208,11 @@ void sieving_step(prime_element *FB, mpz_t N, int fbs, int rank,
   int counter = 0;
   int relations_amt;
 
-
+  //worker continues to sieve until told otherwise
   while (continue_sieving == 1){
     relations_amt = 0;
 
-
+      //array to store powers
       power_storage = new int*[size_FB+1];
 
       for (int i = 0; i < size_FB+1; i++){
@@ -216,24 +222,27 @@ void sieving_step(prime_element *FB, mpz_t N, int fbs, int rank,
         }
       }
 
+      //generate two chunks
       SI = generate_sieving_interval(N, block_size, T);
       mpz_set(T, T_hold);
       SI_SAVE = generate_sieving_interval(N, block_size, T);
       mpz_set(T, T_hold);
 
-      // cout << "Time to sieve!" << endl;
-      worker_sieves(power_storage, &counter, block_size, N, T, size_FB, FB, &relations_amt, rank, SI);
+      //worker's sieving task
+      worker_sieves(power_storage, &counter, block_size, N, T, size_FB,
+        FB, &relations_amt, rank, SI);
 
+      //create relations array and smooth_nums array, then transpose them
+      //and send them
       if (relations_amt > 0){
         relations = alloc_2d_int(relations_amt, size_FB);
         smooth_nums = new string[relations_amt];
 
-        reduce_and_transpose(smooth_nums, relations, power_storage, block_size, size_FB, SI_SAVE);
+        reduce_and_transpose(smooth_nums, relations, power_storage,
+          block_size, size_FB, SI_SAVE);
 
         worker_pack_send(&relations_amt, size_FB, relations, smooth_nums);
 
-        // delete [] relations[0];
-        // delete [] relations;
         free(relations[0]);
         free(relations);
 
@@ -242,6 +251,7 @@ void sieving_step(prime_element *FB, mpz_t N, int fbs, int rank,
         MPI_Recv(&continue_sieving, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, &status);
       }
 
+      //clean memroy and update value of T for next chunk
       delete [] SI;
       delete [] SI_SAVE;
 
@@ -261,8 +271,9 @@ void sieving_step(prime_element *FB, mpz_t N, int fbs, int rank,
 }
 
 /*
-Description: Receives expo matrix and smooth nums (creates bit matrix from expo matrix)
-              from workers and saves them to file. Unpacks smooth nums before saving to file.
+Description: Receives expo matrix and smooth nums (creates bit matrix
+from expo matrix)from workers and saves them to file. Unpacks smooth nums
+before saving to file.
 Params: (1) int pointer to counter
         (2) int factor base size
         (3) int pointer to need_more (does the boss need more relations)
@@ -274,7 +285,8 @@ Return: none
 Output [All Text Files]: (1) Power_Matrix.txt (matrix representation of
                               prime powers of found relations);
                           (2) Bit_Matrix.txt (Power_Matrix mod 2);
-                          (3) Smooth_Numbers.txt (Numbers we have found to be smooth)
+                          (3) Smooth_Numbers.txt (Numbers we have found to
+                          be smooth)
 */
 void master_unpack_save(int* total_counter, int size_FB, int* need_more,
                       ofstream& expo_matrix_file, ofstream& bit_matrix_file,
@@ -285,15 +297,17 @@ void master_unpack_save(int* total_counter, int size_FB, int* need_more,
   char* packed_smooth_nums_m;
 
 
-  // STEP 1 REC
-  MPI_Recv(&new_relations, 1, MPI_INT, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, &status);
+  // STEP 1 Receive number of new relations
+  MPI_Recv(&new_relations, 1, MPI_INT, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD,
+    &status);
   *total_counter += new_relations;
   location = status.MPI_SOURCE;
   size = new_relations * size_FB;
   relations_storage = alloc_2d_int(new_relations, size_FB);
 
-  //STEP 2 REC
-  MPI_Recv(&relations_storage[0][0], size, MPI_INT, location, 0, MPI_COMM_WORLD, &status);
+  //STEP 2 Receive relations and write them
+  MPI_Recv(&relations_storage[0][0], size, MPI_INT, location, 0,
+    MPI_COMM_WORLD, &status);
 
   if (*need_more == 1){
     for (int i = 0; i < new_relations; i++){
@@ -307,13 +321,14 @@ void master_unpack_save(int* total_counter, int size_FB, int* need_more,
     }
   }
 
-  // STEP 3
-  MPI_Recv(&packed_str_length, 1, MPI_INT, location, 0, MPI_COMM_WORLD, &status);
-  // cout << "got length" << endl;
+  // STEP 3 receive length of char array with all smooth_num strings packed
+  MPI_Recv(&packed_str_length, 1, MPI_INT, location, 0, MPI_COMM_WORLD,
+    &status);
   packed_smooth_nums_m = new char[packed_str_length];
-  MPI_Recv(&packed_smooth_nums_m[0], packed_str_length, MPI_CHAR, location, 0, MPI_COMM_WORLD, &status);
-  // cout << "got strs" << endl;
+  MPI_Recv(&packed_smooth_nums_m[0], packed_str_length, MPI_CHAR, location,
+    0, MPI_COMM_WORLD, &status);
 
+  //if more relations still needed, extract smooth_nums from file
   if (*need_more == 1){
     for (int i = 0; i < packed_str_length; i++){
       if (packed_smooth_nums_m[i] != '|' && packed_smooth_nums_m[i] != '\0') {
@@ -329,7 +344,7 @@ void master_unpack_save(int* total_counter, int size_FB, int* need_more,
     *need_more = 0;
   }
 
-
+  //tell worker if more relations are needed
   MPI_Send(need_more, 1, MPI_INT, location, 0, MPI_COMM_WORLD);
 
 
@@ -359,9 +374,9 @@ Params: (1) int double pointer to power_storage 2D array
         (9) polynomial_element pointer to our sieving subinterval array
 Return: Nothing
 */
-void worker_sieves(int** power_storage, int* counter, int block_size, mpz_t N, mpz_t T,
-                    int size_FB, prime_element* FB, int* relations_amt, int rank,
-                    polynomial_element* SI){
+void worker_sieves(int** power_storage, int* counter, int block_size, mpz_t N,
+  mpz_t T,int size_FB, prime_element* FB, int* relations_amt, int rank,
+  polynomial_element* SI){
   mpz_t p, a, b, r, idx, min1, min2;
   mpz_init(p);
   mpz_init(a);
@@ -379,16 +394,20 @@ void worker_sieves(int** power_storage, int* counter, int block_size, mpz_t N, m
       mpz_set_ui(a, FB[i].a);
       mpz_set_ui(b, FB[i].b);
 
-      unsigned long init1 = prime_find_min(block_size, a, p, min1, T, r, idx, rank);
-      unsigned long init2 = prime_find_min(block_size, b, p, min2, T, r, idx, rank);
+      unsigned long init1 = prime_find_min(block_size, a, p, min1, T, r, idx,
+        rank);
+      unsigned long init2 = prime_find_min(block_size, b, p, min2, T, r, idx,
+        rank);
       step = mpz_get_ui (p);
 
       //go ahead and do all of the divisions
       if (init1 < block_size + 1){
-          prime_divide(SI, power_storage, block_size, size_FB, init1, step, counter, i);
+          prime_divide(SI, power_storage, block_size, size_FB, init1, step,
+            counter, i);
       }
       if (init2 < block_size + 1){
-          prime_divide(SI, power_storage, block_size, size_FB, init2, step, counter, i);
+          prime_divide(SI, power_storage, block_size, size_FB, init2, step,
+            counter, i);
       }
 
       if(*counter >= size_FB + 10){
@@ -427,7 +446,7 @@ polynomial_element * generate_sieving_interval(mpz_t N, int pes, mpz_t T){
     mpz_init(Tsq);
     mpz_init(res);
 
-    //Evaluate for 80,000 values and add to array.
+    //Evaluate for chunk size amount of values and add to array.
     for (int i = 0; i < size; i++){
         //res = T^2 - N
         mpz_pow_ui(Tsq, T, 2);
@@ -454,30 +473,29 @@ Params: (1) int pointer to relations amount
 Return: Nothing
 */
 
-void worker_pack_send(int* relations_amt, int size_FB, int** relations, string* smooth_nums){
+void worker_pack_send(int* relations_amt, int size_FB, int** relations,
+  string* smooth_nums){
   string packed_smooth_nums;
   int rels = *relations_amt;
   int* packed_length = new int;
   char *packed;
 
-  //STEP 1 SEND
+  //STEP 1 SEND number of relations
   int ret = MPI_Send(&rels, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
 
 
-  //STEP2
+  //STEP2 send relations
   int size = (size_FB) * rels;
   ret = MPI_Send(&relations[0][0], size, MPI_INT, 0, 0, MPI_COMM_WORLD);
 
 
-  //STEP3 SENDING SMOOTH NUMS
+  //STEP3 SENDING SMOOTH NUMS char array size and then the actual char array
   packed_smooth_nums = pack(packed_length, smooth_nums, rels);
   packed = new char[*packed_length];
   strcpy(packed, packed_smooth_nums.c_str());
   ret = MPI_Send(packed_length, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
-  // cout << "sent length" << endl;
-  // cout << *packed_length << endl;
   ret = MPI_Send(&packed[0], *packed_length, MPI_CHAR, 0, 0, MPI_COMM_WORLD);
-  // cout << "sent strs" << endl;
+
 
   delete[] packed;
   delete packed_length;
@@ -488,7 +506,9 @@ Description: Allocates a contiguous 2D matrix given a row and column size
 Params: (1) int row size
         (2) int column size
 Returns: A int double pointer to a two dimensional contigous array of ints
-
+Taken verbatim from
+https://coderedirect.com/questions/388175/mpi-matrix-
+multiplication-with-dynamic-allocation-seg-fault
 */
 int **alloc_2d_int(int rows, int cols) {
     int *data = (int *)malloc(rows*cols*sizeof(int));
@@ -516,7 +536,8 @@ Return [Explicit]: Nothing
 Return [Implicit]: [Note: We write in place using passed pointers]:
                     (1) polynomial_element array pointer SI;
                     (2) int double pointer to 2D-power_storage array;
-                    (3) int pointer counter (keeping track of number of relations)
+                    (3) int pointer counter (keeping track of number
+                    of relations)
 */
 void prime_divide(polynomial_element* SI, int** power_storage, int block_size,
                   int size_FB, int smallest, int prime, int* counter, int i){
@@ -601,8 +622,8 @@ Return [Explicit]: Nothing
 Return [Implicit]: (1) smooth_nums array
                    (2) relations 2D matrix
 */
-void reduce_and_transpose(string* smooth_nums, int** relations, int** power_storage,
-                          int block_size, int size_FB, polynomial_element* SI){
+void reduce_and_transpose(string* smooth_nums, int** relations,
+  int** power_storage, int block_size, int size_FB, polynomial_element* SI){
   string temp;
 
   int s_idx = 0;
