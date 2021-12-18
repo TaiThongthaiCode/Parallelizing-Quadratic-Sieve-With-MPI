@@ -2,7 +2,8 @@
 
 Tai Thongthai and Tarang Saluja
 
-"Life is not a problem to be solved, but a reality to be experienced" - Benjamin Tennyson 10;
+"Life is not a problem to be solved, but a reality to be experienced"
+- Benjamin Tennyson 10;
 
 */
 
@@ -30,8 +31,6 @@ int main(int argc, char *argv[]){
 
     char* pq = argv[1];
 
-    //cout << "step2 now running for N="<<pq << endl;
-
     //Set value of N
     mpz_t N;
     mpz_init(N);
@@ -40,8 +39,7 @@ int main(int argc, char *argv[]){
     size_t j = mpz_sizeinbase (N, 10);
     int size = static_cast<int>(j);
 
-    //current size of sieving interval
-    //int pes = 386*size*size -23209.3*size + 2352768;
+    //sieving chunk size
     int pes = 16000;
     int fbs;
     int relation_count = 0;
@@ -60,14 +58,9 @@ int main(int argc, char *argv[]){
     prime_element * FB = load(N, fbs);
 
 
-    // for (int i = 0; i < fbs; i++) {
-    //     cout << FB[i].p << "-"<< FB[i].a << "-"<< FB[i].b << endl;
-    // }
-
-
     //Write complete columns as rows into a text file
     sieving_step(FB, N, fbs, pes);
-    //cout << "step2 done running for N="<<pq << endl << endl;
+
 
 
     return 0;
@@ -143,9 +136,8 @@ polynomial_element * generate_sieving_interval(mpz_t N, int size_SSI, mpz_t T){
     mpz_init(res);
 
 
-    //Evaluate for 80,000 values and add to array.
+    //Evaluate for chunk size amount of values and add to array.
     for (int i = 0; i < size_SSI; i++){
-        //res = T^2 - N
         mpz_pow_ui(Tsq, T, 2);
         mpz_sub(res, Tsq, N);
 
@@ -171,7 +163,8 @@ Return: Nothing
 Output [All Text Files]: (1) Power_Matrix.txt (matrix representation of
                               prime powers of found relations);
                           (2) Bit_Matrix.txt (Power_Matrix mod 2);
-                          (3) Smooth_Numbers.txt (Numbers we have found to be smooth)
+                          (3) Smooth_Numbers.txt (Numbers we have found
+                          to be smooth)
 */
 void sieving_step(prime_element *FB, mpz_t N, int fbs, int pes){
 
@@ -197,11 +190,11 @@ void sieving_step(prime_element *FB, mpz_t N, int fbs, int pes){
   mpz_add_ui(T, T, 1); //Buffer T by one to ensure non
   mpz_set(T_hold, T);
   temp = mpz_get_str(NULL, 10, T);
-  // cout << "The value of T is " <<  temp << endl;
 
+  //counter for total number of relations
   int counter = 0;
 
-
+  //create text files that we will write to
   ofstream smooth_num_store;
   smooth_num_store.open ("Smooth_Num.txt");
 
@@ -215,7 +208,8 @@ void sieving_step(prime_element *FB, mpz_t N, int fbs, int pes){
   while (counter < size_FB + 10){
     temp = mpz_get_str(NULL, 10, T);
 
-    //initialize matrix which stores max power of a prime which divides any given polynomial evaluation
+    //initialize matrix which stores max power of a prime which divides
+    //any given polynomial evaluation
     power_storage = new int*[size_FB+1];
     for (int i = 0; i < size_FB+1; i++){
       power_storage[i] = new int[size_SSI];
@@ -224,20 +218,21 @@ void sieving_step(prime_element *FB, mpz_t N, int fbs, int pes){
       }
     }
 
-    // counting number of relation
+    // Create two copies of sieving interval and maintain value of T
     SI = generate_sieving_interval(N, size_SSI, T);
     mpz_set(T, T_hold);
     SI_SAVE = generate_sieving_interval(N, size_SSI, T);
     mpz_set(T, T_hold);
 
-
+    //iteration through primes for sieving
     for (int i = 0; i < size_FB; i++){
       //convert p, a, b to mpz types
       mpz_init_set_ui(p, FB[i].p);
       mpz_init_set_ui(a, FB[i].a);
       mpz_init_set_ui(b, FB[i].b);
 
-      //find smallest indices such that the polynomial evaluation at that index is divisble by p
+      //find smallest indices such that the polynomial evaluation at
+      //that index is divisble by p in chunk
       init1 = prime_find_min(size_SI, a, p, min1, T_hold);
       init2 = prime_find_min(size_SI, b, p, min2, T_hold);
       // string temp;
@@ -245,8 +240,10 @@ void sieving_step(prime_element *FB, mpz_t N, int fbs, int pes){
       step = mpz_get_ui (p);
 
       //go ahead and do all of the divisions
-      prime_divide(SI, power_storage, &counter, size_SSI, size_FB, init1, step, i);
-      prime_divide(SI, power_storage, &counter, size_SSI, size_FB, init2, step, i);
+      prime_divide(SI, power_storage, &counter, size_SSI, size_FB, init1,
+        step, i);
+      prime_divide(SI, power_storage, &counter, size_SSI, size_FB, init2,
+        step, i);
 
 
       //if there are enough relations, it is time to return
@@ -255,9 +252,11 @@ void sieving_step(prime_element *FB, mpz_t N, int fbs, int pes){
       }
     }
 
+    //write the relations to the file
     write_to_file(smooth_num_store, power_matrix_store, bit_matrix_store,
                   size_SSI, size_FB, power_storage, SI_SAVE);
 
+    //clean memory and update smallest value of next chunk
     delete[] SI;
     delete[] SI_SAVE;
 
@@ -301,9 +300,11 @@ Return [Explicit]: Nothing
 Return [Implicit]: [Note: We write in place using passed pointers]:
                     (1) polynomial_element array pointer SI;
                     (2) int double pointer to 2D-power_storage array;
-                    (3) int pointer counter (keeping track of number of relations)
+                    (3) int pointer counter (keeping track of number of
+                    relations)
 */
-void prime_divide(polynomial_element* SI, int** power_storage, int* counter, int size_SI, int size_FB, int smallest, int prime, int i){
+void prime_divide(polynomial_element* SI, int** power_storage, int* counter,
+  int size_SI, int size_FB, int smallest, int prime, int i){
     int power = 0;
     int step = prime;
     int q;
@@ -328,7 +329,7 @@ void prime_divide(polynomial_element* SI, int** power_storage, int* counter, int
         if (q == 0){
           *counter += 1; //iterate counter if it has now been reduced to 1
           power_storage[size_FB][j] = 1;
-          if (*counter >= size_FB + 10){
+          if (*counter >= size_FB + 10){ //return if enough relations found
             return;
           }
         }
@@ -362,7 +363,8 @@ int prime_find_min(int size_SI, mpz_t a, mpz_t p, mpz_t min, mpz_t T){
   int q;
 
   for (unsigned long int j = 0; j < size_SI; j++){
-      //for each prime, figure out the smallest polynomial expressed as (a+pk)^2 - N
+      //for each prime, figure out the smallest polynomial expressed as
+      // (a+pk)^2 - N
       mpz_set_ui(idx, j);
       mpz_add(idx, idx, T);
       mpz_sub(idx, idx, a);
@@ -391,7 +393,8 @@ Return: Nothing
 Output [All Text Files]: (1) Power_Matrix.txt (matrix representation of
                               prime powers of found relations);
                           (2) Bit_Matrix.txt (Power_Matrix mod 2);
-                          (3) Smooth_Numbers.txt (Numbers we have found to be smooth)
+                          (3) Smooth_Numbers.txt (Numbers we have found
+                          to be smooth)
 */
 void write_to_file(ofstream& smooth_num_store, ofstream& power_matrix_store,
   ofstream& bit_matrix_store, int size_SSI, int size_FB,
